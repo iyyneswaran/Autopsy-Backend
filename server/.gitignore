@@ -1,7 +1,11 @@
-node_modules
-# Keep environment variables out of version control
-.env
-
-/generated/prisma
-dist/
 node_modules/
+dist/
+.env
+*.log
+logs/
+coverage/
+.nyc_output/
+*.tsbuildinfo
+generated/prisma/
+uploads/*
+!uploads/.gitkeep

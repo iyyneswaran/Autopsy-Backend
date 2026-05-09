@@ -1,3 +1,7 @@
+// ═══════════════════════════════════════════════
+// Atopsy Prisma Schema — Enterprise Edition
+// ═══════════════════════════════════════════════
+
 generator client {
   provider = "prisma-client-js"
 }
@@ -6,40 +10,215 @@ datasource db {
   provider = "postgresql"
 }
 
-model User {
-  id            Int      @id @default(autoincrement())
-  name          String
-  email         String   @unique
-  passwordHash  String
-  role          String
-  createdAt     DateTime @default(now())
+// ─────────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  INVESTIGATOR
+  FORENSIC_EXPERT
 }
 
-model Case {
-  id          Int      @id @default(autoincrement())
+enum InvestigationStatus {
+  OPEN
+  IN_PROGRESS
+  REVIEW
+  CLOSED
+  ARCHIVED
+}
+
+enum EvidenceType {
+  DOCUMENT
+  IMAGE
+  VIDEO
+  AUDIO
+  DIGITAL
+  PHYSICAL
+  AUTOPSY_REPORT
+}
+
+// ─────────────────────────────────────────────
+// USER
+// ─────────────────────────────────────────────
+
+model User {
+  id               String    @id @default(uuid()) @db.Uuid
+  email            String    @unique
+  passwordHash     String
+  firstName        String
+  lastName         String
+  role             Role      @default(INVESTIGATOR)
+  isActive         Boolean   @default(true)
+  isEmailVerified  Boolean   @default(false)
+  loginAttempts    Int       @default(0)
+  lockedUntil      DateTime?
+  lastLoginAt      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  // Relations
+  sessions         Session[]
+  refreshTokens    RefreshToken[]
+  auditLogs        AuditLog[]
+  investigations   Investigation[]   @relation("CreatedBy")
+  assignedCases    Investigation[]   @relation("AssignedTo")
+  evidence         Evidence[]
+  autopsyReports   AutopsyReport[]
+
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+  @@map("users")
+}
+
+// ─────────────────────────────────────────────
+// SESSION (device/session tracking)
+// ─────────────────────────────────────────────
+
+model Session {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  userAgent   String?
+  ipAddress   String?
+  isValid     Boolean   @default(true)
+  expiresAt   DateTime
+  createdAt   DateTime  @default(now())
+
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([isValid])
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────────
+// REFRESH TOKEN (rotation strategy)
+// ─────────────────────────────────────────────
+
+model RefreshToken {
+  id           String    @id @default(uuid()) @db.Uuid
+  userId       String    @db.Uuid
+  tokenHash    String    @unique
+  tokenFamily  String    @db.Uuid
+  isRevoked    Boolean   @default(false)
+  expiresAt    DateTime
+  createdAt    DateTime  @default(now())
+
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([tokenFamily])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────
+// AUDIT LOG
+// ─────────────────────────────────────────────
+
+model AuditLog {
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String?   @db.Uuid
+  action      String
+  entity      String
+  entityId    String?
+  ipAddress   String?
+  userAgent   String?
+  metadata    Json?
+  createdAt   DateTime  @default(now())
+
+  user        User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([action])
+  @@index([entity])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─────────────────────────────────────────────
+// INVESTIGATION (Case)
+// ─────────────────────────────────────────────
+
+model Investigation {
+  id          String              @id @default(uuid()) @db.Uuid
+  caseNumber  String              @unique
   title       String
   description String
-  status      String   @default("OPEN")
-  createdBy   Int
-  createdAt   DateTime @default(now())
+  status      InvestigationStatus @default(OPEN)
+  priority    Int                 @default(0)
+  createdById String              @db.Uuid
+  assignedToId String?            @db.Uuid
+  closedAt    DateTime?
+  createdAt   DateTime            @default(now())
+  updatedAt   DateTime            @updatedAt
+
+  createdBy   User                @relation("CreatedBy", fields: [createdById], references: [id])
+  assignedTo  User?               @relation("AssignedTo", fields: [assignedToId], references: [id])
+  evidence    Evidence[]
+  autopsyReports AutopsyReport[]
+
+  @@index([caseNumber])
+  @@index([status])
+  @@index([createdById])
+  @@index([assignedToId])
+  @@map("investigations")
 }
+
+// ─────────────────────────────────────────────
+// EVIDENCE
+// ─────────────────────────────────────────────
 
 model Evidence {
-  id          Int      @id @default(autoincrement())
-  caseId      Int
-  fileName    String
-  filePath    String
-  fileHash    String
-  fileType    String
-  uploadedBy  Int
-  createdAt   DateTime @default(now())
+  id              String        @id @default(uuid()) @db.Uuid
+  investigationId String        @db.Uuid
+  type            EvidenceType
+  fileName        String
+  filePath        String
+  fileHash        String
+  fileSize        Int
+  mimeType        String?
+  description     String?
+  metadata        Json?
+  uploadedById    String        @db.Uuid
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  investigation   Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  uploadedBy      User          @relation(fields: [uploadedById], references: [id])
+
+  @@index([investigationId])
+  @@index([type])
+  @@index([uploadedById])
+  @@map("evidence")
 }
 
-model Analysis {
-  id               Int      @id @default(autoincrement())
-  evidenceId       Int
-  analysisType     String
-  resultJson       Json
-  confidenceScore  Float?
-  createdAt        DateTime @default(now())
+// ─────────────────────────────────────────────
+// AUTOPSY REPORT
+// ─────────────────────────────────────────────
+
+model AutopsyReport {
+  id                String        @id @default(uuid()) @db.Uuid
+  investigationId   String        @db.Uuid
+  subjectName       String?
+  subjectAge        Int?
+  subjectGender     String?
+  causeOfDeath      String?
+  mannerOfDeath     String?
+  timeOfDeath       DateTime?
+  summary           String?
+  findings          Json?
+  toxicologyResults Json?
+  aiAnalysis        Json?
+  createdById       String        @db.Uuid
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+
+  investigation     Investigation @relation(fields: [investigationId], references: [id], onDelete: Cascade)
+  createdBy         User          @relation(fields: [createdById], references: [id])
+
+  @@index([investigationId])
+  @@index([createdById])
+  @@map("autopsy_reports")
 }
