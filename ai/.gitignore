@@ -31,3 +31,4 @@ archive.zip
 
 .codspeed
 /venv
+logs/

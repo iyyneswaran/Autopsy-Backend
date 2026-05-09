@@ -1,6 +1,0 @@
-2026-05-10 00:31:20.397 | INFO     | app.main:startup_event:109 - Starting Atopsy AI Backend...
-2026-05-10 00:31:20.397 | INFO     | app.workers.analysis_worker:worker_loop:89 - Analysis worker started
-2026-05-10 00:31:20.398 | INFO     | app.main:startup_event:116 - Analysis worker initialized
-2026-05-10 00:31:20.398 | INFO     | app.workers.cleanup_worker:cleanup_temp_files:15 - Cleanup worker started
-2026-05-10 00:31:20.398 | INFO     | app.main:startup_event:128 - Cleanup worker initialized
-2026-05-10 00:31:20.399 | INFO     | app.main:startup_event:132 - Application startup completed
