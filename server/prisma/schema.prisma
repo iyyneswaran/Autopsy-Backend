@@ -1,0 +1,45 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          String
+  createdAt     DateTime @default(now())
+}
+
+model Case {
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String
+  status      String   @default("OPEN")
+  createdBy   Int
+  createdAt   DateTime @default(now())
+}
+
+model Evidence {
+  id          Int      @id @default(autoincrement())
+  caseId      Int
+  fileName    String
+  filePath    String
+  fileHash    String
+  fileType    String
+  uploadedBy  Int
+  createdAt   DateTime @default(now())
+}
+
+model Analysis {
+  id               Int      @id @default(autoincrement())
+  evidenceId       Int
+  analysisType     String
+  resultJson       Json
+  confidenceScore  Float?
+  createdAt        DateTime @default(now())
+}
