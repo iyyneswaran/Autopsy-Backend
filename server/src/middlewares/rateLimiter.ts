@@ -23,7 +23,7 @@ export const globalLimiter = rateLimit({
 
 export const authLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 10, // 10 attempts
+    max: 10000, // Disabled for hackathon
     standardHeaders: true,
     legacyHeaders: false,
     message: {

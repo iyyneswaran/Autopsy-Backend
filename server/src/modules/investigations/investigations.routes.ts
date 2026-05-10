@@ -32,7 +32,7 @@ router.patch(
 
 router.delete(
     "/:id",
-    authorize("ADMIN"),
+    authorize("ADMIN", "INVESTIGATOR"),
     InvestigationsController.delete
 );
 
