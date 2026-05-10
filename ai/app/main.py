@@ -27,6 +27,12 @@ from app.workers.cleanup_worker import (
     cleanup_temp_files
 )
 
+from app.workers.ingestion_worker import (
+    start_ingestion_worker
+)
+
+from app.exceptions.pipeline import AtopsyBaseError
+
 import threading
 import app.models
 
@@ -129,6 +135,13 @@ async def startup_event():
         "Cleanup worker initialized"
     )
 
+    # Start Pipeline Ingestion Worker
+    start_ingestion_worker()
+
+    logger.info(
+        "Pipeline ingestion worker initialized"
+    )
+
     logger.info(
         "Application startup completed"
     )
@@ -149,6 +162,23 @@ async def shutdown_event():
 # =========================
 # GLOBAL EXCEPTION HANDLER
 # =========================
+
+@app.exception_handler(AtopsyBaseError)
+async def pipeline_exception_handler(
+    request: Request,
+    exc: AtopsyBaseError
+):
+    logger.error(
+        f"Pipeline Error [{exc.error_code}]: {exc.message}"
+    )
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={
+            "success": False,
+            **exc.to_dict()
+        }
+    )
+
 
 @app.exception_handler(Exception)
 async def global_exception_handler(

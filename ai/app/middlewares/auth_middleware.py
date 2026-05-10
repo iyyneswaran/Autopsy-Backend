@@ -26,7 +26,8 @@ class AuthMiddleware(
             "/ping",
             "/system/status",
             "/auth/login",
-            "/health"
+            "/health",
+            "/pipeline/health",
         ]
 
         if request.url.path in excluded_paths:

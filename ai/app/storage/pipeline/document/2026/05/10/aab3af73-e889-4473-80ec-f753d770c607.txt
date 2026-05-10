@@ -1,0 +1,26 @@
+
+FORENSIC AUTOPSY REPORT
+Date: 2024-03-15T14:30:00Z
+Location: 40.7128, -74.0060
+
+Subject: John Doe, Male, Age 45
+Height: 5'11" (180.34 cm)
+Weight: 185 lbs (83.91 kg)
+
+Cause of Death: Blunt force trauma to the cranium
+Time of Death (estimated): 2024-03-14T22:00:00Z
+
+Toxicology:
+- Blood Alcohol: 0.08%
+- Benzodiazepines: Detected
+
+Scene Description:
+The decedent was found at coordinates 40.7128N, 74.0060W
+in a residential area. Ambient temperature was 68°F.
+Rigor mortis was fully established.
+
+Evidence collected:
+- Hair samples (3)
+- Blood samples (2)
+- Fiber samples (5)
+- Digital device: iPhone 15 Pro

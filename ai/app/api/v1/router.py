@@ -6,7 +6,8 @@ from app.api.v1.endpoints import (
     evidence,
     analysis,
     timeline,
-    health
+    health,
+    pipeline,
 )
 
 api_router = APIRouter()
@@ -17,3 +18,4 @@ api_router.include_router(evidence.router)
 api_router.include_router(analysis.router)
 api_router.include_router(timeline.router)
 api_router.include_router(health.router)
+api_router.include_router(pipeline.router)

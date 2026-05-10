@@ -1,0 +1,19 @@
+{
+  "device_id": "TRACKER-4491",
+  "coordinates": [
+    {
+      "lat": 40.7128,
+      "lon": -74.006,
+      "timestamp": "2024-03-14T21:30:00Z",
+      "speed_mph": 35
+    },
+    {
+      "lat": 40.7138,
+      "lon": -74.005,
+      "timestamp": "2024-03-14T21:45:00Z",
+      "speed_mph": 0
+    }
+  ],
+  "battery_pct": 78,
+  "signal_strength": "strong"
+}
