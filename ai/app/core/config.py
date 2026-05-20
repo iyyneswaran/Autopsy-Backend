@@ -42,6 +42,9 @@ class Settings(BaseSettings):
     # Temp storage
     TEMP_DIR: str = "app/storage/temp"
 
+    # Google Gemini (for handwriting OCR)
+    GOOGLE_API_KEY: str = ""
+
     # Normalization
     NORMALIZATION_QUALITY_THRESHOLD: float = 0.5
     DEFAULT_TIMEZONE: str = "UTC"
