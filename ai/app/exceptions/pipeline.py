@@ -183,3 +183,50 @@ class QualityThresholdError(NormalizationError):
 
     status_code = 422
     error_code = "QUALITY_THRESHOLD_NOT_MET"
+
+
+# ─────────────────────────────────────────────
+# Extraction errors (Layer 3)
+# ─────────────────────────────────────────────
+
+
+class ExtractionError(PipelineError):
+    """Error during OCR & NLP extraction phase."""
+
+    error_code = "EXTRACTION_ERROR"
+
+
+class NLPExtractionError(ExtractionError):
+    """NLP extraction failed for a document."""
+
+    error_code = "NLP_EXTRACTION_ERROR"
+
+
+class TextAssemblyError(ExtractionError):
+    """Failed to assemble text from OCR output."""
+
+    error_code = "TEXT_ASSEMBLY_ERROR"
+
+
+# ─────────────────────────────────────────────
+# Entity structuring errors (Layer 4)
+# ─────────────────────────────────────────────
+
+
+class EntityStructuringError(PipelineError):
+    """Error during forensic entity structuring phase."""
+
+    error_code = "ENTITY_STRUCTURING_ERROR"
+
+
+class EntityValidationError(EntityStructuringError):
+    """Entity failed validation checks."""
+
+    status_code = 422
+    error_code = "ENTITY_VALIDATION_ERROR"
+
+
+class ProvenanceError(EntityStructuringError):
+    """Provenance chain is broken or incomplete."""
+
+    error_code = "PROVENANCE_ERROR"

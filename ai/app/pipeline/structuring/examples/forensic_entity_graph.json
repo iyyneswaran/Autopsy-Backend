@@ -1,0 +1,273 @@
+{
+  "evidence_file_id": "a1b2c3d4-5678-9abc-def0-111111111111",
+  "schema_version": "1.0.0",
+  "entities": {
+    "CASE_IDENTIFIER": [
+      {
+        "entity_id": "ent-001-case-pm",
+        "entity_type": "CASE_IDENTIFIER",
+        "canonical_value": "PME-2024/1847",
+        "raw_value": "PME-2024/1847",
+        "category": "CASE_IDENTIFIER",
+        "sub_type": "PM_NUMBER",
+        "confidence": 0.7735,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 3, "start_char": 75, "end_char": 99, "raw_text": "P.M. No.: PME-2024/1847"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.85,
+          "transformations": [],
+          "original_text": "P.M. No.: PME-2024/1847",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {"sub_type": "PM_NUMBER"},
+        "validation_errors": []
+      }
+    ],
+    "DECEASED_INFO": [
+      {
+        "entity_id": "ent-002-deceased-name",
+        "entity_type": "DECEASED_INFO",
+        "canonical_value": "Rajesh Kumar Sharma",
+        "raw_value": "Rajesh Kumar Sharma",
+        "category": "DECEASED_INFO",
+        "sub_type": "DECEASED_NAME",
+        "confidence": 0.6825,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 7, "start_char": 162, "end_char": 200, "raw_text": "Name of Deceased: Rajesh Kumar Sharma"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.75,
+          "transformations": [],
+          "original_text": "Name of Deceased: Rajesh Kumar Sharma",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      },
+      {
+        "entity_id": "ent-003-deceased-age",
+        "entity_type": "DECEASED_INFO",
+        "canonical_value": "42",
+        "raw_value": "42",
+        "category": "DECEASED_INFO",
+        "sub_type": "DECEASED_AGE",
+        "confidence": 0.728,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 8, "start_char": 201, "end_char": 215, "raw_text": "Age: 42 years"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.80,
+          "transformations": [],
+          "original_text": "Age: 42 years",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      },
+      {
+        "entity_id": "ent-004-deceased-gender",
+        "entity_type": "DECEASED_INFO",
+        "canonical_value": "Male",
+        "raw_value": "Male",
+        "category": "DECEASED_INFO",
+        "sub_type": "DECEASED_GENDER",
+        "confidence": 0.819,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 9, "start_char": 216, "end_char": 225, "raw_text": "Sex: Male"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.90,
+          "transformations": [
+            {
+              "stage": "value_normalization",
+              "rule": "DECEASED_INFO_normalization",
+              "value_before": "Male",
+              "value_after": "Male",
+              "confidence_before": 0.90,
+              "confidence_after": 0.90,
+              "timestamp": "2024-03-15T14:30:01Z"
+            }
+          ],
+          "original_text": "Sex: Male",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {"raw_value": "Male"},
+        "validation_errors": []
+      }
+    ],
+    "INJURY": [
+      {
+        "entity_id": "ent-005-injury-01",
+        "entity_type": "INJURY",
+        "canonical_value": "Lacerated wound measuring 6x2x1 cm over the right temporal region",
+        "raw_value": "Lacerated wound measuring 6x2x1 cm over the right temporal region",
+        "category": "INJURY",
+        "sub_type": "INJURY",
+        "confidence": 0.6825,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 15, "start_char": 345, "end_char": 411, "raw_text": "1. Lacerated wound measuring 6x2x1 cm over the right temporal region."}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.75,
+          "transformations": [],
+          "original_text": "1. Lacerated wound measuring 6x2x1 cm over the right temporal region.",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      }
+    ],
+    "CAUSE_OF_DEATH": [
+      {
+        "entity_id": "ent-008-cod",
+        "entity_type": "CAUSE_OF_DEATH",
+        "canonical_value": "Craniocerebral damage due to blunt force trauma",
+        "raw_value": "Craniocerebral damage due to blunt force trauma",
+        "category": "CAUSE_OF_DEATH",
+        "sub_type": "CAUSE_OF_DEATH",
+        "confidence": 0.728,
+        "provenance": {
+          "source_spans": [{"page": 2, "line": 10, "start_char": 680, "end_char": 740, "raw_text": "Cause of Death: Craniocerebral damage due to blunt force trauma."}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.80,
+          "transformations": [],
+          "original_text": "Cause of Death: Craniocerebral damage due to blunt force trauma.",
+          "document_page": 2
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      }
+    ],
+    "MANNER_OF_DEATH": [
+      {
+        "entity_id": "ent-009-mod",
+        "entity_type": "MANNER_OF_DEATH",
+        "canonical_value": "HOMICIDE",
+        "raw_value": "Homicide",
+        "category": "MANNER_OF_DEATH",
+        "sub_type": "MANNER_OF_DEATH",
+        "confidence": 0.728,
+        "provenance": {
+          "source_spans": [{"page": 2, "line": 11, "start_char": 741, "end_char": 768, "raw_text": "Manner of Death: Homicide"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.80,
+          "transformations": [
+            {
+              "stage": "value_normalization",
+              "rule": "MANNER_OF_DEATH_normalization",
+              "value_before": "Homicide",
+              "value_after": "HOMICIDE",
+              "confidence_before": 0.80,
+              "confidence_after": 0.80,
+              "timestamp": "2024-03-15T14:30:01Z"
+            }
+          ],
+          "original_text": "Manner of Death: Homicide",
+          "document_page": 2
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      }
+    ],
+    "EXAMINER": [
+      {
+        "entity_id": "ent-006-examiner",
+        "entity_type": "EXAMINER",
+        "canonical_value": "Dr. Anita Deshmukh",
+        "raw_value": "Dr. Anita Deshmukh",
+        "category": "EXAMINER",
+        "sub_type": "EXAMINING_DOCTOR",
+        "confidence": 0.6825,
+        "provenance": {
+          "source_spans": [{"page": 1, "line": 12, "start_char": 268, "end_char": 320, "raw_text": "Performed by: Dr. Anita Deshmukh, MD Forensic Medicine"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.75,
+          "transformations": [],
+          "original_text": "Performed by: Dr. Anita Deshmukh, MD Forensic Medicine",
+          "document_page": 1
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      }
+    ],
+    "TOXICOLOGY_FINDING": [
+      {
+        "entity_id": "ent-010-tox-ethanol",
+        "entity_type": "TOXICOLOGY_FINDING",
+        "canonical_value": "ethanol: Detected (0.08 g/dL)",
+        "raw_value": "Ethanol: Detected (0.08 g/dL)",
+        "category": "TOXICOLOGY_FINDING",
+        "sub_type": "TOXICOLOGY_FINDING",
+        "confidence": 0.6825,
+        "provenance": {
+          "source_spans": [{"page": 2, "line": 15, "start_char": 830, "end_char": 860, "raw_text": "Ethanol: Detected (0.08 g/dL)"}],
+          "extractor_id": "regex_forensic_v1",
+          "extraction_method": "rule_based",
+          "extraction_confidence": 0.75,
+          "transformations": [
+            {
+              "stage": "value_normalization",
+              "rule": "TOXICOLOGY_FINDING_normalization",
+              "value_before": "Ethanol: Detected (0.08 g/dL)",
+              "value_after": "ethanol: Detected (0.08 g/dL)",
+              "confidence_before": 0.75,
+              "confidence_after": 0.75,
+              "timestamp": "2024-03-15T14:30:01Z"
+            }
+          ],
+          "original_text": "Ethanol: Detected (0.08 g/dL)",
+          "document_page": 2
+        },
+        "normalization_status": "VALIDATED",
+        "metadata": {},
+        "validation_errors": []
+      }
+    ]
+  },
+  "relationships": [
+    {
+      "source_entity_id": "ent-005-injury-01",
+      "target_entity_id": "ent-008-cod",
+      "relationship_type": "CAUSED_BY",
+      "confidence": 0.65,
+      "metadata": {"inferred": true}
+    }
+  ],
+  "metrics": {
+    "total_entities": 9,
+    "entity_type_counts": {
+      "CASE_IDENTIFIER": 1,
+      "DECEASED_INFO": 3,
+      "INJURY": 1,
+      "CAUSE_OF_DEATH": 1,
+      "MANNER_OF_DEATH": 1,
+      "EXAMINER": 1,
+      "TOXICOLOGY_FINDING": 1
+    },
+    "average_confidence": 0.7243,
+    "normalization_coverage": 1.0,
+    "validation_pass_rate": 1.0,
+    "provenance_depth_avg": 0.33
+  },
+  "stage_reports": [
+    {"stage": "entity_mapping", "status": "completed", "duration_ms": 3.2, "entities_processed": 10},
+    {"stage": "value_normalization", "status": "completed", "duration_ms": 1.8, "entities_processed": 9},
+    {"stage": "provenance_assembly", "status": "completed", "duration_ms": 0.5, "entities_processed": 9},
+    {"stage": "confidence_aggregation", "status": "completed", "duration_ms": 0.3, "entities_processed": 9},
+    {"stage": "validation_and_assembly", "status": "completed", "duration_ms": 1.1, "entities_processed": 9}
+  ],
+  "processing_time_ms": 6.9,
+  "processed_at": "2024-03-15T14:30:02Z"
+}

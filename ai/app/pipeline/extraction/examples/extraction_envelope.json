@@ -1,0 +1,156 @@
+{
+  "evidence_file_id": "a1b2c3d4-5678-9abc-def0-111111111111",
+  "assembled_document": {
+    "full_text": "DEPARTMENT OF FORENSIC MEDICINE\nGOVERNMENT MEDICAL COLLEGE, NAGPUR\n\nP.M. No.: PME-2024/1847\nCase No.: CR-156/2024\nMLC No.: MLC-2024/3892\n\nName of Deceased: Rajesh Kumar Sharma\nAge: 42 years\nSex: Male\n\nDate of Examination: 15-03-2024\nPerformed by: Dr. Anita Deshmukh, MD Forensic Medicine\n\nEXTERNAL EXAMINATION:\n1. Lacerated wound measuring 6x2x1 cm over the right temporal region.\n2. Contusion measuring 4x3 cm over the left forearm.\n3. Abrasion measuring 3x2 cm over the right knee.\n\nINTERNAL EXAMINATION:\nBrain: Congested. Subdural hemorrhage over right temporal lobe.\nHeart: Normal size, weighing 310 grams.\nLungs: Congested and edematous.\nLiver: Normal size and consistency.\nKidneys: Normal.\nStomach: Contains partially digested food.\n\nOPINION:\nCause of Death: Craniocerebral damage due to blunt force trauma.\nManner of Death: Homicide\nTime of Death: Approximately 12-18 hours prior to post-mortem.\n\nTOXICOLOGY:\nEthanol: Detected (0.08 g/dL)\nOpiates: Not detected\nCannabis: Not detected",
+    "pages": [
+      {
+        "page_number": 1,
+        "text": "DEPARTMENT OF FORENSIC MEDICINE\nGOVERNMENT MEDICAL COLLEGE, NAGPUR\n\nP.M. No.: PME-2024/1847\nCase No.: CR-156/2024\nMLC No.: MLC-2024/3892\n\nName of Deceased: Rajesh Kumar Sharma\nAge: 42 years\nSex: Male\n\nDate of Examination: 15-03-2024\nPerformed by: Dr. Anita Deshmukh, MD Forensic Medicine\n\nEXTERNAL EXAMINATION:\n1. Lacerated wound measuring 6x2x1 cm over the right temporal region.\n2. Contusion measuring 4x3 cm over the left forearm.\n3. Abrasion measuring 3x2 cm over the right knee.",
+        "lines": [
+          {"text": "DEPARTMENT OF FORENSIC MEDICINE", "tokens": [], "confidence": 0.94, "page": 1, "line_number": 0, "content_type": "PRINTED"},
+          {"text": "P.M. No.: PME-2024/1847", "tokens": [], "confidence": 0.91, "page": 1, "line_number": 3, "content_type": "PRINTED"},
+          {"text": "Name of Deceased: Rajesh Kumar Sharma", "tokens": [], "confidence": 0.88, "page": 1, "line_number": 7, "content_type": "HANDWRITTEN"}
+        ],
+        "confidence": 0.91,
+        "content_type": "MIXED",
+        "language": "english",
+        "ocr_engine": "MERGED"
+      },
+      {
+        "page_number": 2,
+        "text": "INTERNAL EXAMINATION:\nBrain: Congested. Subdural hemorrhage over right temporal lobe.\nHeart: Normal size, weighing 310 grams.\nLungs: Congested and edematous.\nLiver: Normal size and consistency.\nKidneys: Normal.\nStomach: Contains partially digested food.\n\nOPINION:\nCause of Death: Craniocerebral damage due to blunt force trauma.\nManner of Death: Homicide\nTime of Death: Approximately 12-18 hours prior to post-mortem.\n\nTOXICOLOGY:\nEthanol: Detected (0.08 g/dL)\nOpiates: Not detected\nCannabis: Not detected",
+        "lines": [],
+        "confidence": 0.89,
+        "content_type": "PRINTED",
+        "language": "english",
+        "ocr_engine": "TESSERACT"
+      }
+    ],
+    "total_lines": 28,
+    "total_tokens": 187,
+    "average_confidence": 0.9,
+    "languages_detected": ["english"],
+    "content_types": ["MIXED", "PRINTED"],
+    "assembly_time_ms": 12.5
+  },
+  "extracted_spans": [
+    {
+      "entity_type": "CASE_IDENTIFIER",
+      "value": "PME-2024/1847",
+      "source_span": {"page": 1, "line": 3, "start_char": 75, "end_char": 99, "raw_text": "P.M. No.: PME-2024/1847"},
+      "confidence": 0.85,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {"sub_type": "PM_NUMBER"},
+      "is_partial": false
+    },
+    {
+      "entity_type": "CASE_IDENTIFIER",
+      "value": "CR-156/2024",
+      "source_span": {"page": 1, "line": 4, "start_char": 100, "end_char": 122, "raw_text": "Case No.: CR-156/2024"},
+      "confidence": 0.85,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {"sub_type": "CASE_NUMBER"},
+      "is_partial": false
+    },
+    {
+      "entity_type": "DECEASED_NAME",
+      "value": "Rajesh Kumar Sharma",
+      "source_span": {"page": 1, "line": 7, "start_char": 162, "end_char": 200, "raw_text": "Name of Deceased: Rajesh Kumar Sharma"},
+      "confidence": 0.75,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {"sub_type": "DECEASED_NAME"},
+      "is_partial": false
+    },
+    {
+      "entity_type": "DECEASED_AGE",
+      "value": "42",
+      "source_span": {"page": 1, "line": 8, "start_char": 201, "end_char": 215, "raw_text": "Age: 42 years"},
+      "confidence": 0.8,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {"sub_type": "DECEASED_AGE"},
+      "is_partial": false
+    },
+    {
+      "entity_type": "DECEASED_GENDER",
+      "value": "Male",
+      "source_span": {"page": 1, "line": 9, "start_char": 216, "end_char": 225, "raw_text": "Sex: Male"},
+      "confidence": 0.9,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {"sub_type": "DECEASED_GENDER"},
+      "is_partial": false
+    },
+    {
+      "entity_type": "EXAMINING_DOCTOR",
+      "value": "Dr. Anita Deshmukh",
+      "source_span": {"page": 1, "line": 12, "start_char": 268, "end_char": 320, "raw_text": "Performed by: Dr. Anita Deshmukh, MD Forensic Medicine"},
+      "confidence": 0.75,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {},
+      "is_partial": false
+    },
+    {
+      "entity_type": "INJURY",
+      "value": "Lacerated wound measuring 6x2x1 cm over the right temporal region",
+      "source_span": {"page": 1, "line": 15, "start_char": 345, "end_char": 411, "raw_text": "1. Lacerated wound measuring 6x2x1 cm over the right temporal region."},
+      "confidence": 0.75,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {},
+      "is_partial": false
+    },
+    {
+      "entity_type": "CAUSE_OF_DEATH",
+      "value": "Craniocerebral damage due to blunt force trauma",
+      "source_span": {"page": 2, "line": 10, "start_char": 680, "end_char": 740, "raw_text": "Cause of Death: Craniocerebral damage due to blunt force trauma."},
+      "confidence": 0.8,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {},
+      "is_partial": false
+    },
+    {
+      "entity_type": "MANNER_OF_DEATH",
+      "value": "Homicide",
+      "source_span": {"page": 2, "line": 11, "start_char": 741, "end_char": 768, "raw_text": "Manner of Death: Homicide"},
+      "confidence": 0.8,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {},
+      "is_partial": false
+    },
+    {
+      "entity_type": "TOXICOLOGY_FINDING",
+      "value": "Ethanol: Detected (0.08 g/dL)",
+      "source_span": {"page": 2, "line": 15, "start_char": 830, "end_char": 860, "raw_text": "Ethanol: Detected (0.08 g/dL)"},
+      "confidence": 0.75,
+      "extractor_id": "regex_forensic_v1",
+      "extraction_method": "rule_based",
+      "metadata": {},
+      "is_partial": false
+    }
+  ],
+  "metadata": {
+    "evidence_file_id": "a1b2c3d4-5678-9abc-def0-111111111111",
+    "document_id": "doc-ocr-2024-1847",
+    "extractors_used": ["regex_forensic_v1"],
+    "total_spans": 10,
+    "overall_confidence": 0.8,
+    "page_count": 2,
+    "processing_time_ms": 145.3,
+    "warnings": [],
+    "processed_at": "2024-03-15T14:30:00Z"
+  },
+  "stage_reports": [
+    {"stage": "text_assembly", "status": "completed", "duration_ms": 12.5},
+    {"stage": "nlp_extraction", "status": "completed", "duration_ms": 98.2},
+    {"stage": "confidence_calibration", "status": "completed", "duration_ms": 2.1},
+    {"stage": "envelope_assembly", "status": "completed", "duration_ms": 1.5}
+  ],
+  "schema_version": "1.0.0"
+}

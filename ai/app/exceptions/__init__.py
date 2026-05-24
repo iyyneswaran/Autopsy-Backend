@@ -20,6 +20,12 @@ from app.exceptions.pipeline import (
     CorruptedDataError,
     AnomalyDetectedError,
     QualityThresholdError,
+    ExtractionError,
+    NLPExtractionError,
+    TextAssemblyError,
+    EntityStructuringError,
+    EntityValidationError,
+    ProvenanceError,
 )
 
 __all__ = [
@@ -37,4 +43,10 @@ __all__ = [
     "CorruptedDataError",
     "AnomalyDetectedError",
     "QualityThresholdError",
+    "ExtractionError",
+    "NLPExtractionError",
+    "TextAssemblyError",
+    "EntityStructuringError",
+    "EntityValidationError",
+    "ProvenanceError",
 ]

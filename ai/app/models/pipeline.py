@@ -382,3 +382,132 @@ class NormalizationRecord(Base):
     evidence_file = relationship(
         "EvidenceFile", back_populates="normalization_records"
     )
+
+
+# ─────────────────────────────────────────────
+# ExtractionStatus enum (shared by Layer 3 & 4)
+# ─────────────────────────────────────────────
+
+
+class ExtractionStatus(str, enum.Enum):
+    PENDING = "PENDING"
+    IN_PROGRESS = "IN_PROGRESS"
+    COMPLETED = "COMPLETED"
+    PARTIAL = "PARTIAL"
+    FAILED = "FAILED"
+
+
+# ─────────────────────────────────────────────
+# OCRExtractionRecord — Layer 3 output
+# ─────────────────────────────────────────────
+
+
+class OCRExtractionRecord(Base):
+    """
+    Stores the OCR & NLP extraction output for each evidence file.
+    Produced by the ExtractionEngine (Layer 3).
+    """
+
+    __tablename__ = "ocr_extraction_records"
+    __table_args__ = (
+        Index("ix_ocr_extract_evidence", "evidence_file_id"),
+        Index("ix_ocr_extract_status", "status"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    evidence_file_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("evidence_files.id"),
+        nullable=False,
+    )
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    extraction_envelope = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    page_count = Column(Integer, default=0)
+    total_spans = Column(Integer, default=0)
+    overall_confidence = Column(Float, default=0.0)
+    extractors_used = Column(JSON, default=list)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    evidence_file = relationship("EvidenceFile")
+
+
+# ─────────────────────────────────────────────
+# ForensicEntityRecord — Layer 4 output
+# ─────────────────────────────────────────────
+
+
+class ForensicEntityRecord(Base):
+    """
+    Stores the forensic entity graph for each evidence file.
+    Produced by the StructuringEngine (Layer 4).
+    """
+
+    __tablename__ = "forensic_entity_records"
+    __table_args__ = (
+        Index("ix_forensic_ent_evidence", "evidence_file_id"),
+        Index("ix_forensic_ent_extraction", "ocr_extraction_id"),
+        Index("ix_forensic_ent_status", "status"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    evidence_file_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("evidence_files.id"),
+        nullable=False,
+    )
+    ocr_extraction_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("ocr_extraction_records.id"),
+        nullable=True,
+    )
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    entity_graph = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    entity_count = Column(Integer, default=0)
+    entity_types_found = Column(JSON, default=list)
+    overall_confidence = Column(Float, default=0.0)
+    provenance_depth = Column(Integer, default=0)
+    validation_passed = Column(Boolean, default=False)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    evidence_file = relationship("EvidenceFile")
+    ocr_extraction = relationship("OCRExtractionRecord")
