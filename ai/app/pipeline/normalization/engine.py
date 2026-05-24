@@ -157,7 +157,7 @@ class NormalizationEngine:
                 "forensic_entity_extraction",
                 stage_reports,
                 lambda: self._stage_entity_extraction(
-                    resolved_metadata, context, confidence_tracker
+                    resolved_metadata, context, confidence_tracker, evidence_file_id
                 ),
                 fallback=None,
             )
@@ -434,26 +434,85 @@ class NormalizationEngine:
         metadata: dict[str, Any],
         context: dict[str, Any],
         tracker: ConfidenceTracker,
+        evidence_file_id: str,
     ) -> None:
-        """Stage 4: Forensic entity extraction."""
+        """Stage 4: Forensic entity extraction (Load Layer 4 or fallback to Layer 2)."""
+        from app.models.pipeline import ForensicEntityRecord, ExtractionStatus
         from app.pipeline.normalization.stages.forensic_entity_extractor import (
             extract_forensic_entities,
+            ForensicEntity,
+            ForensicEntitySet,
         )
 
-        # Build text from content preview or all string values
-        text_parts = []
-        for key in ["content_preview", "extracted_text", "full_text"]:
-            if key in metadata and isinstance(metadata[key], str):
-                text_parts.append(metadata[key])
+        entities = None
 
-        if not text_parts:
-            text_parts = [
-                str(v) for v in metadata.values()
-                if isinstance(v, str) and len(v) > 20
-            ]
+        # 1. Try to load Layer 4 structured output
+        try:
+            layer4_record = (
+                self.db.query(ForensicEntityRecord)
+                .filter(
+                    ForensicEntityRecord.evidence_file_id == uuid.UUID(evidence_file_id),
+                    ForensicEntityRecord.status == ExtractionStatus.COMPLETED
+                )
+                .order_by(ForensicEntityRecord.created_at.desc())
+                .first()
+            )
 
-        full_text = "\n".join(text_parts)
-        entities = extract_forensic_entities(full_text)
+            if layer4_record and layer4_record.entity_graph:
+                graph = layer4_record.entity_graph
+                entities = ForensicEntitySet()
+                
+                type_mapping = {
+                    "DECEASED_INFO": "deceased_info",
+                    "INJURY": "injuries",
+                    "TOXICOLOGY_FINDING": "toxicology",
+                    "CAUSE_OF_DEATH": "cause_of_death",
+                    "MANNER_OF_DEATH": "manner_of_death",
+                    "TIME_OF_DEATH": "time_of_death",
+                    "EXAMINER": "examining_doctor",
+                    "CASE_IDENTIFIER": "case_identifier",
+                    "ANATOMICAL_REFERENCE": "anatomical_references",
+                    "ORGAN_FINDING": "organ_findings",
+                    "EXTERNAL_EXAMINATION": "external_examination",
+                    "INTERNAL_EXAMINATION": "internal_examination"
+                }
+
+                for ent_type, ents in graph.get("entities", {}).items():
+                    attr = type_mapping.get(ent_type)
+                    if attr:
+                        for ent in ents:
+                            f_ent = ForensicEntity(
+                                entity_type=ent_type,
+                                raw_value=ent.get("raw_value", ""),
+                                normalized_value=ent.get("canonical_value", ""),
+                                confidence=ent.get("confidence", 0.7)
+                            )
+                            getattr(entities, attr).append(f_ent)
+                
+                logger.info(
+                    f"Loaded {len(entities.all_entities)} entities from "
+                    f"Layer 4 Structuring for {evidence_file_id}"
+                )
+        except Exception as e:
+            logger.warning(f"Failed to load Layer 4 output, falling back to Layer 2: {e}")
+
+        # 2. Fallback to Layer 2 text-based extraction
+        if not entities:
+            # Build text from content preview or all string values
+            text_parts = []
+            for key in ["content_preview", "extracted_text", "full_text"]:
+                if key in metadata and isinstance(metadata[key], str):
+                    text_parts.append(metadata[key])
+
+            if not text_parts:
+                text_parts = [
+                    str(v) for v in metadata.values()
+                    if isinstance(v, str) and len(v) > 20
+                ]
+
+            full_text = "\n".join(text_parts)
+            entities = extract_forensic_entities(full_text)
+
         context["forensic_entities"] = entities
 
         # Track confidence for key entities
