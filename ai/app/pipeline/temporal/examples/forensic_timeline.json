@@ -1,0 +1,159 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "PME-2024/1847",
+  "evidence_file_ids": [
+    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+  ],
+  "timeline": [
+    {
+      "event_id": "evt-001",
+      "label": "Last Seen Alive",
+      "description": "Deceased last seen by neighbor around 10 PM on 24/01/2024",
+      "category": "LAST_SEEN_ALIVE",
+      "time_window": {
+        "earliest": "2024-01-24T21:30:00+05:30",
+        "latest": "2024-01-24T22:30:00+05:30",
+        "best_estimate": "2024-01-24T22:00:00+05:30",
+        "confidence": 0.70,
+        "precision": "APPROXIMATE",
+        "timezone_info": "Asia/Kolkata"
+      },
+      "is_observed": true,
+      "is_anchor": false,
+      "confidence": 0.70,
+      "resolution_method": "DIRECT_PARSE"
+    },
+    {
+      "event_id": "evt-002",
+      "label": "Estimated Time of Death: Approximately 12-18 hours prior to post-mortem",
+      "description": "Approximately 12-18 hours prior to post-mortem",
+      "category": "DEATH",
+      "time_window": {
+        "earliest": "2024-01-24T18:00:00+05:30",
+        "latest": "2024-01-25T00:00:00+05:30",
+        "best_estimate": "2024-01-24T21:00:00+05:30",
+        "confidence": 0.70,
+        "precision": "RANGE",
+        "timezone_info": "Asia/Kolkata"
+      },
+      "temporal_expressions": [
+        {
+          "raw_text": "12-18 hours prior to post-mortem",
+          "normalized_form": "PMI: 12.0–18.0 hours",
+          "precision": "RANGE",
+          "resolution_method": "PMI_ESTIMATION",
+          "confidence": 0.70
+        }
+      ],
+      "is_observed": true,
+      "is_anchor": false,
+      "confidence": 0.70,
+      "resolution_method": "RELATIVE_ANCHOR"
+    },
+    {
+      "event_id": "evt-003",
+      "label": "Discovery of Body",
+      "description": "Body discovered by neighbor on 25/01/2024 morning",
+      "category": "DISCOVERY",
+      "time_window": {
+        "earliest": "2024-01-25T06:00:00+05:30",
+        "latest": "2024-01-25T08:00:00+05:30",
+        "best_estimate": "2024-01-25T07:00:00+05:30",
+        "confidence": 0.75,
+        "precision": "APPROXIMATE"
+      },
+      "is_observed": true,
+      "confidence": 0.75,
+      "resolution_method": "DIRECT_PARSE"
+    },
+    {
+      "event_id": "evt-004",
+      "label": "Post-Mortem Examination",
+      "description": "PME conducted by Dr. Anita Deshmukh",
+      "category": "EXAMINATION",
+      "time_window": {
+        "earliest": "2024-01-25T12:00:00+05:30",
+        "latest": "2024-01-25T12:00:00+05:30",
+        "best_estimate": "2024-01-25T12:00:00+05:30",
+        "confidence": 0.90,
+        "precision": "EXACT"
+      },
+      "is_observed": true,
+      "is_anchor": true,
+      "confidence": 0.90,
+      "resolution_method": "DIRECT_PARSE"
+    }
+  ],
+  "event_order": ["evt-001", "evt-002", "evt-003", "evt-004"],
+  "temporal_relations": [
+    {
+      "source_event_id": "evt-001",
+      "target_event_id": "evt-002",
+      "relation_type": "BEFORE",
+      "confidence": 0.85,
+      "rationale": "Forensic constraint: LAST_SEEN_ALIVE must precede DEATH",
+      "is_inferred": true
+    },
+    {
+      "source_event_id": "evt-002",
+      "target_event_id": "evt-003",
+      "relation_type": "BEFORE",
+      "confidence": 0.85,
+      "rationale": "Forensic constraint: DEATH must precede DISCOVERY",
+      "is_inferred": true
+    },
+    {
+      "source_event_id": "evt-003",
+      "target_event_id": "evt-004",
+      "relation_type": "BEFORE",
+      "confidence": 0.75,
+      "rationale": "Time window A ends before B begins",
+      "is_inferred": false
+    }
+  ],
+  "tod_candidates": [
+    {
+      "candidate_id": "tod-001",
+      "time_window": {
+        "earliest": "2024-01-24T18:00:00+05:30",
+        "latest": "2024-01-25T00:00:00+05:30",
+        "best_estimate": "2024-01-24T21:00:00+05:30",
+        "confidence": 0.70,
+        "precision": "RANGE"
+      },
+      "estimation_method": "pmi_range",
+      "evidence_basis": ["PMI: 12-18 hours prior to post-mortem"],
+      "confidence": 0.70,
+      "rationale": "PMI-based: 12.0–18.0 hours before examination",
+      "source_evidence_ids": ["a1b2c3d4-e5f6-7890-abcd-ef1234567890"]
+    },
+    {
+      "candidate_id": "tod-002",
+      "time_window": {
+        "earliest": "2024-01-24T22:00:00+05:30",
+        "confidence": 0.49,
+        "precision": "APPROXIMATE"
+      },
+      "estimation_method": "last_seen_alive",
+      "evidence_basis": ["Deceased last seen by neighbor around 10 PM"],
+      "confidence": 0.49,
+      "rationale": "Last seen alive: around 10 PM. Death occurred after this time.",
+      "source_evidence_ids": ["b2c3d4e5-f6a7-8901-bcde-f12345678901"]
+    }
+  ],
+  "uncertainty_ranges": [
+    {
+      "label": "PMI: 12.0–18.0 hours",
+      "raw_expression": "post-mortem interval estimated at 12-18 hours",
+      "min_hours": 12.0,
+      "max_hours": 18.0,
+      "best_estimate_hours": 15.0,
+      "unit": "hours",
+      "confidence": 0.70,
+      "source_evidence_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+    }
+  ],
+  "temporal_conflicts": [],
+  "processing_time_ms": 32.45
+}
