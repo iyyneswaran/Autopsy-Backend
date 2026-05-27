@@ -1,0 +1,190 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "PME-2024/1847",
+  "evidence_file_ids": [
+    "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+    "c3d4e5f6-a7b8-9012-cdef-123456789012"
+  ],
+  "entity_clusters": [
+    {
+      "cluster_id": "cl-001",
+      "canonical_label": "Rajesh Kumar Sharma",
+      "entity_type": "DECEASED_INFO",
+      "status": "CONFIRMED",
+      "members": [
+        {
+          "entity_id": "ent-a1",
+          "evidence_file_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "entity_type": "DECEASED_INFO",
+          "canonical_value": "Rajesh Kumar Sharma",
+          "raw_value": "Name: Rajesh K. Sharma",
+          "confidence": 0.85,
+          "extraction_method": "rule_based"
+        },
+        {
+          "entity_id": "ent-b1",
+          "evidence_file_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+          "entity_type": "DECEASED_INFO",
+          "canonical_value": "Rajesh Kumar Sharma",
+          "raw_value": "Deceased: Rajesh Kumar Sharma, M/42",
+          "confidence": 0.90,
+          "extraction_method": "rule_based"
+        }
+      ],
+      "confidence": 0.875,
+      "rationale": "Clustered 2 DECEASED_INFO entities across 2 documents",
+      "evidence_file_ids": [
+        "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "b2c3d4e5-f6a7-8901-bcde-f12345678901"
+      ],
+      "internal_edges": [],
+      "metadata": {}
+    },
+    {
+      "cluster_id": "cl-002",
+      "canonical_label": "PME-2024/1847",
+      "entity_type": "CASE_IDENTIFIER",
+      "status": "CONFIRMED",
+      "members": [
+        {
+          "entity_id": "ent-a2",
+          "evidence_file_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "entity_type": "CASE_IDENTIFIER",
+          "canonical_value": "PME-2024/1847",
+          "raw_value": "PM No. 1847/2024",
+          "confidence": 0.90,
+          "extraction_method": "rule_based"
+        },
+        {
+          "entity_id": "ent-c1",
+          "evidence_file_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+          "entity_type": "CASE_IDENTIFIER",
+          "canonical_value": "PME-2024/1847",
+          "raw_value": "Case No: PME/1847/24",
+          "confidence": 0.82,
+          "extraction_method": "rule_based"
+        }
+      ],
+      "confidence": 0.86,
+      "rationale": "Clustered 2 CASE_IDENTIFIER entities across 2 documents",
+      "evidence_file_ids": [
+        "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "c3d4e5f6-a7b8-9012-cdef-123456789012"
+      ],
+      "internal_edges": [],
+      "metadata": {}
+    }
+  ],
+  "relationship_edges": [
+    {
+      "edge_id": "edge-001",
+      "source_entity_id": "ent-a1",
+      "target_entity_id": "ent-b1",
+      "source_evidence_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "target_evidence_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+      "edge_type": "SAME_PERSON",
+      "match_type": "EXACT",
+      "confidence": 0.85,
+      "weight": 1.0,
+      "rationale": "Exact match on DECEASED_INFO: 'Rajesh Kumar Sharma'",
+      "similarity_score": 1.0,
+      "source_provenance": {
+        "evidence_file_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "entity_id": "ent-a1",
+        "entity_type": "DECEASED_INFO",
+        "canonical_value": "Rajesh Kumar Sharma",
+        "confidence": 0.85,
+        "extraction_method": "rule_based"
+      },
+      "target_provenance": {
+        "evidence_file_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "entity_id": "ent-b1",
+        "entity_type": "DECEASED_INFO",
+        "canonical_value": "Rajesh Kumar Sharma",
+        "confidence": 0.90,
+        "extraction_method": "rule_based"
+      }
+    },
+    {
+      "edge_id": "edge-002",
+      "source_entity_id": "ent-inj1",
+      "target_entity_id": "ent-cod1",
+      "source_evidence_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "target_evidence_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "edge_type": "CAUSAL_LINK",
+      "match_type": "INFERRED",
+      "confidence": 0.56,
+      "weight": 0.7,
+      "rationale": "Inferred CAUSAL_LINK: INJURY('Lacerated wound 6x2x1 cm over right temporal region') → CAUSE_OF_DEATH('Craniocerebral damage due to blunt force trauma') within same document",
+      "similarity_score": 0.0
+    }
+  ],
+  "contradictions": [
+    {
+      "contradiction_id": "ctr-001",
+      "entity_type": "TIME_OF_DEATH",
+      "field": "time_of_death",
+      "severity": "HIGH",
+      "description": "Cross-document contradiction in TIME_OF_DEATH: 'Approximately 12-18 hours prior' vs 'Around 24 hours before examination'",
+      "source_a": {
+        "entity_id": "ent-tod1",
+        "evidence_file_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+        "value": "Approximately 12-18 hours prior",
+        "confidence": 0.70
+      },
+      "source_b": {
+        "entity_id": "ent-tod2",
+        "evidence_file_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+        "value": "Around 24 hours before examination",
+        "confidence": 0.65
+      },
+      "resolution_hint": "Prefer higher-confidence value: 'Approximately 12-18 hours prior'",
+      "is_resolved": false
+    }
+  ],
+  "evidence_groups": [
+    {
+      "group_id": "grp-001",
+      "case_identifier": "PME-2024/1847",
+      "group_label": "Case: PME-2024/1847",
+      "members": [
+        {
+          "evidence_file_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+          "document_type": "autopsy_report",
+          "entity_count": 15,
+          "confidence": 0.82
+        },
+        {
+          "evidence_file_id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+          "document_type": "fir_document",
+          "entity_count": 8,
+          "confidence": 0.78
+        },
+        {
+          "evidence_file_id": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+          "document_type": "toxicology_report",
+          "entity_count": 6,
+          "confidence": 0.88
+        }
+      ],
+      "confidence": 0.8267,
+      "rationale": "Grouped by shared case identifiers across 3 evidence files"
+    }
+  ],
+  "confidence_summary": {
+    "overall_confidence": 0.7560,
+    "average_edge_confidence": 0.7050,
+    "average_cluster_confidence": 0.8675,
+    "exact_match_count": 3,
+    "fuzzy_match_count": 1,
+    "inferred_match_count": 5,
+    "conflicting_match_count": 1,
+    "total_edges": 10,
+    "total_clusters": 2,
+    "total_contradictions": 1,
+    "high_confidence_edges": 4,
+    "low_confidence_edges": 2
+  },
+  "processing_time_ms": 45.67
+}

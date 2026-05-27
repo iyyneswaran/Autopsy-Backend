@@ -511,3 +511,113 @@ class ForensicEntityRecord(Base):
 
     evidence_file = relationship("EvidenceFile")
     ocr_extraction = relationship("OCRExtractionRecord")
+
+
+# ─────────────────────────────────────────────
+# CorrelationRecord — Layer 5 output
+# ─────────────────────────────────────────────
+
+
+class CorrelationRecord(Base):
+    """
+    Stores the evidence correlation graph for a set of evidence files.
+    Produced by the CorrelationEngine (Layer 5).
+    """
+
+    __tablename__ = "correlation_records"
+    __table_args__ = (
+        Index("ix_corr_case", "case_id"),
+        Index("ix_corr_status", "status"),
+        Index("ix_corr_created", "created_at"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    case_id = Column(UUID(as_uuid=True), nullable=True)
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    correlation_graph = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    evidence_file_ids = Column(JSON, default=list)
+    cluster_count = Column(Integer, default=0)
+    edge_count = Column(Integer, default=0)
+    contradiction_count = Column(Integer, default=0)
+    evidence_group_count = Column(Integer, default=0)
+    overall_confidence = Column(Float, default=0.0)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+
+# ─────────────────────────────────────────────
+# TemporalRecord — Layer 6 output
+# ─────────────────────────────────────────────
+
+
+class TemporalRecord(Base):
+    """
+    Stores the forensic timeline for a set of evidence files.
+    Produced by the TemporalEngine (Layer 6).
+    """
+
+    __tablename__ = "temporal_records"
+    __table_args__ = (
+        Index("ix_temp_case", "case_id"),
+        Index("ix_temp_correlation", "correlation_id"),
+        Index("ix_temp_status", "status"),
+        Index("ix_temp_created", "created_at"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    case_id = Column(UUID(as_uuid=True), nullable=True)
+    correlation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("correlation_records.id"),
+        nullable=True,
+    )
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    forensic_timeline = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    evidence_file_ids = Column(JSON, default=list)
+    event_count = Column(Integer, default=0)
+    relation_count = Column(Integer, default=0)
+    conflict_count = Column(Integer, default=0)
+    tod_candidate_count = Column(Integer, default=0)
+    overall_confidence = Column(Float, default=0.0)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    correlation_record = relationship("CorrelationRecord")

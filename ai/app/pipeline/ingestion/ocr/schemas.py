@@ -49,6 +49,7 @@ class LegibilityGrade(str, enum.Enum):
     FAIR = "FAIR"
     POOR = "POOR"
     ILLEGIBLE = "ILLEGIBLE"
+    UNKNOWN = "UNKNOWN"
 
 
 class OCREngine(str, enum.Enum):
