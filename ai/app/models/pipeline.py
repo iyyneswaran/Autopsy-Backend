@@ -621,3 +621,126 @@ class TemporalRecord(Base):
     completed_at = Column(DateTime, nullable=True)
 
     correlation_record = relationship("CorrelationRecord")
+
+
+# ─────────────────────────────────────────────
+# TODEstimationRecord — Layer 7 output
+# ─────────────────────────────────────────────
+
+
+class TODEstimationRecord(Base):
+    """
+    Stores the TOD estimation result for a set of evidence files.
+    Produced by the TODEstimationEngine (Layer 7).
+    """
+
+    __tablename__ = "tod_estimation_records"
+    __table_args__ = (
+        Index("ix_tod_case", "case_id"),
+        Index("ix_tod_temporal", "temporal_id"),
+        Index("ix_tod_status", "status"),
+        Index("ix_tod_created", "created_at"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    case_id = Column(UUID(as_uuid=True), nullable=True)
+    temporal_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("temporal_records.id"),
+        nullable=True,
+    )
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    tod_estimation_result = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    evidence_file_ids = Column(JSON, default=list)
+    candidate_count = Column(Integer, default=0)
+    signal_count = Column(Integer, default=0)
+    conflict_count = Column(Integer, default=0)
+    overall_confidence = Column(Float, default=0.0)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    temporal_record = relationship("TemporalRecord")
+
+
+# ─────────────────────────────────────────────
+# AnomalyDetectionRecord — Layer 8 output
+# ─────────────────────────────────────────────
+
+
+class AnomalyDetectionRecord(Base):
+    """
+    Stores the anomaly/contradiction detection report for a case.
+    Produced by the AnomalyDetectionEngine (Layer 8).
+    """
+
+    __tablename__ = "anomaly_detection_records"
+    __table_args__ = (
+        Index("ix_anomaly_case", "case_id"),
+        Index("ix_anomaly_tod", "tod_estimation_id"),
+        Index("ix_anomaly_status", "status"),
+        Index("ix_anomaly_created", "created_at"),
+        {"extend_existing": True},
+    )
+
+    id = Column(
+        UUID(as_uuid=True), primary_key=True, default=uuid.uuid4
+    )
+
+    case_id = Column(UUID(as_uuid=True), nullable=True)
+    temporal_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("temporal_records.id"),
+        nullable=True,
+    )
+    tod_estimation_id = Column(
+        UUID(as_uuid=True),
+        ForeignKey("tod_estimation_records.id"),
+        nullable=True,
+    )
+
+    status = Column(
+        SAEnum(
+            ExtractionStatus,
+            name="extraction_status_enum",
+            create_type=False,
+        ),
+        default=ExtractionStatus.PENDING,
+    )
+
+    anomaly_report = Column(JSON, nullable=True)
+    schema_version = Column(String(20), default="1.0.0")
+    evidence_file_ids = Column(JSON, default=list)
+    anomaly_count = Column(Integer, default=0)
+    contradiction_count = Column(Integer, default=0)
+    critical_count = Column(Integer, default=0)
+    high_count = Column(Integer, default=0)
+    overall_confidence = Column(Float, default=0.0)
+    stages_completed = Column(JSON, default=list)
+    stages_failed = Column(JSON, default=list)
+    error_message = Column(Text, nullable=True)
+    processing_time_ms = Column(Float, default=0.0)
+
+    created_at = Column(DateTime, default=_utcnow)
+    completed_at = Column(DateTime, nullable=True)
+
+    temporal_record = relationship("TemporalRecord")
+    tod_estimation_record = relationship("TODEstimationRecord")
