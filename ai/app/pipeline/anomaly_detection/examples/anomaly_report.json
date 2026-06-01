@@ -1,0 +1,166 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "evidence_file_ids": [
+    "file-001-autopsy",
+    "file-002-fir",
+    "file-003-toxicology"
+  ],
+  "anomalies": [
+    {
+      "finding_id": "anom-001",
+      "finding_type": "MISSING_DATA",
+      "category": "EVIDENCE_INTEGRITY",
+      "severity": "HIGH",
+      "title": "Missing MANNER_OF_DEATH",
+      "description": "Required entity type 'MANNER_OF_DEATH' is absent from evidence file file-003-toxicology",
+      "affected_evidence_ids": ["file-003-toxicology"],
+      "rule_id": "MISSING_MANNER_OF_DEATH",
+      "confidence": 0.9,
+      "recommendation": "Review source document for MANNER_OF_DEATH information; may indicate OCR failure or incomplete document"
+    },
+    {
+      "finding_id": "anom-002",
+      "finding_type": "OCR_ARTIFACT",
+      "category": "OCR_QUALITY",
+      "severity": "LOW",
+      "title": "Suspicious OCR artifact in INJURY",
+      "description": "Entity value contains suspicious patterns that may indicate OCR errors: 'Contusiiion on le|||ft temporal region'",
+      "affected_entity_ids": ["ent-inj-003"],
+      "affected_evidence_ids": ["file-001-autopsy"],
+      "rule_id": "OCR_ARTIFACT",
+      "confidence": 0.7,
+      "recommendation": "Re-examine source document; value may need manual correction"
+    },
+    {
+      "finding_id": "anom-003",
+      "finding_type": "ANOMALY",
+      "category": "TEMPORAL",
+      "severity": "CRITICAL",
+      "title": "Impossible event order: LAST_SEEN_ALIVE → DEATH",
+      "description": "Last seen alive must precede death: 'Last seen alive' (2024-03-15T10:00:00+05:30) occurs after 'Estimated death' (2024-03-15T01:00:00+05:30)",
+      "affected_timeline_event_ids": ["evt-lsa-001", "evt-death-001"],
+      "affected_evidence_ids": ["file-002-fir", "file-001-autopsy"],
+      "rule_id": "IMPOSSIBLE_ORDER",
+      "confidence": 0.9,
+      "recommendation": "Verify timestamps in source documents; one or both may contain errors"
+    }
+  ],
+  "contradictions": [
+    {
+      "finding_id": "contra-001",
+      "finding_type": "CONTRADICTION",
+      "category": "MEDICAL",
+      "severity": "CRITICAL",
+      "title": "Contradicting CAUSE_OF_DEATH across documents",
+      "description": "'Asphyxia due to hanging' (from file-001-autopsy) contradicts 'Poisoning by organophosphorus compound' (from file-003-toxicology)",
+      "field": "CAUSE_OF_DEATH",
+      "value_a": "Asphyxia due to hanging",
+      "value_b": "Poisoning by organophosphorus compound",
+      "source_a": {
+        "entity_id": "ent-cod-001",
+        "evidence_file_id": "file-001-autopsy",
+        "value": "Asphyxia due to hanging",
+        "confidence": 0.92,
+        "raw_text": "Cause of death: Asphyxia due to hanging",
+        "page": 5
+      },
+      "source_b": {
+        "entity_id": "ent-cod-002",
+        "evidence_file_id": "file-003-toxicology",
+        "value": "Poisoning by organophosphorus compound",
+        "confidence": 0.78,
+        "raw_text": "Opinion: death due to poisoning by organophosphorus compound"
+      },
+      "similarity_score": 0.15,
+      "affected_entity_ids": ["ent-cod-001", "ent-cod-002"],
+      "affected_evidence_ids": ["file-001-autopsy", "file-003-toxicology"],
+      "rule_id": "SINGLETON_CROSS_DOC",
+      "confidence": 0.92,
+      "resolution_hint": "Review source documents and prefer higher-confidence value",
+      "recommendation": "Review source documents and prefer higher-confidence value"
+    }
+  ],
+  "severity_summary": {
+    "critical": 2,
+    "high": 1,
+    "medium": 0,
+    "low": 1,
+    "total": 4
+  },
+  "affected_entities": [
+    {
+      "entity_id": "ent-cod-001",
+      "entity_type": "CAUSE_OF_DEATH",
+      "evidence_file_id": "file-001-autopsy",
+      "finding_ids": ["contra-001"],
+      "highest_severity": "CRITICAL"
+    },
+    {
+      "entity_id": "ent-inj-003",
+      "entity_type": "INJURY",
+      "evidence_file_id": "file-001-autopsy",
+      "finding_ids": ["anom-002"],
+      "highest_severity": "LOW"
+    }
+  ],
+  "affected_timeline_events": [
+    {
+      "event_id": "evt-lsa-001",
+      "event_label": "Last seen alive",
+      "finding_ids": ["anom-003"],
+      "highest_severity": "CRITICAL"
+    }
+  ],
+  "rule_hits": [
+    {
+      "rule_id": "SINGLETON_CROSS_DOC",
+      "rule_name": "Singleton Cross Doc",
+      "finding_ids": ["contra-001"],
+      "category": "MEDICAL",
+      "description": "Contradicting CAUSE_OF_DEATH across documents",
+      "hit_count": 1
+    },
+    {
+      "rule_id": "MISSING_MANNER_OF_DEATH",
+      "rule_name": "Missing Manner Of Death",
+      "finding_ids": ["anom-001"],
+      "category": "EVIDENCE_INTEGRITY",
+      "description": "Missing MANNER_OF_DEATH",
+      "hit_count": 1
+    },
+    {
+      "rule_id": "OCR_ARTIFACT",
+      "rule_name": "Ocr Artifact",
+      "finding_ids": ["anom-002"],
+      "category": "OCR_QUALITY",
+      "description": "Suspicious OCR artifact in INJURY",
+      "hit_count": 1
+    },
+    {
+      "rule_id": "IMPOSSIBLE_ORDER",
+      "rule_name": "Impossible Order",
+      "finding_ids": ["anom-003"],
+      "category": "TEMPORAL",
+      "description": "Impossible event order",
+      "hit_count": 1
+    }
+  ],
+  "confidence_scores": {
+    "overall_confidence": 0.855,
+    "average_finding_confidence": 0.855,
+    "high_confidence_findings": 3,
+    "low_confidence_findings": 0,
+    "total_findings": 4,
+    "rules_evaluated": 14,
+    "rules_fired": 4
+  },
+  "recommendations": [
+    "Verify timestamps in source documents; one or both may contain errors",
+    "Review source documents and prefer higher-confidence value",
+    "Review source document for MANNER_OF_DEATH information; may indicate OCR failure or incomplete document",
+    "Re-examine source document; value may need manual correction"
+  ],
+  "processing_time_ms": 32.17,
+  "processed_at": "2024-03-16T10:31:00Z"
+}

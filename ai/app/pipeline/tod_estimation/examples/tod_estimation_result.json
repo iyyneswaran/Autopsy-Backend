@@ -1,0 +1,202 @@
+{
+  "schema_version": "1.0.0",
+  "case_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "evidence_file_ids": [
+    "file-001-autopsy",
+    "file-002-fir",
+    "file-003-toxicology"
+  ],
+  "tod_candidates": [
+    {
+      "candidate_id": "cand-001",
+      "tod_window": {
+        "earliest": "2024-03-14T22:00:00+05:30",
+        "latest": "2024-03-15T04:00:00+05:30",
+        "best_estimate": "2024-03-15T01:00:00+05:30",
+        "window_hours": 6.0,
+        "confidence": 0.82,
+        "precision": "RANGE"
+      },
+      "estimation_method": "consensus_pmi_statement",
+      "supporting_signals": ["sig-001", "sig-002", "sig-005"],
+      "conflicting_signals": [],
+      "confidence": 0.82,
+      "rationale": "Consensus from 3 signals (dominant: PMI_STATEMENT)",
+      "provenance_entries": [
+        {
+          "evidence_file_id": "file-001-autopsy",
+          "entity_id": "ent-tod-001",
+          "entity_type": "TIME_OF_DEATH",
+          "raw_text": "Post-mortem interval estimated 12 to 18 hours",
+          "canonical_value": "PMI 12-18 hours prior to examination",
+          "confidence": 0.85,
+          "extraction_method": "regex_pmi",
+          "page": 3
+        }
+      ],
+      "is_primary": true,
+      "rank": 1,
+      "corroboration_count": 3
+    },
+    {
+      "candidate_id": "cand-002",
+      "tod_window": {
+        "earliest": "2024-03-14T20:00:00+05:30",
+        "latest": "2024-03-15T06:00:00+05:30",
+        "best_estimate": "2024-03-15T01:00:00+05:30",
+        "window_hours": 10.0,
+        "confidence": 0.65,
+        "precision": "RANGE"
+      },
+      "estimation_method": "consensus_rigor_mortis",
+      "supporting_signals": ["sig-003"],
+      "conflicting_signals": [],
+      "confidence": 0.65,
+      "rationale": "Consensus from 1 signals (dominant: RIGOR_MORTIS)",
+      "is_primary": false,
+      "rank": 2,
+      "corroboration_count": 1
+    }
+  ],
+  "estimated_window": {
+    "earliest": "2024-03-14T22:00:00+05:30",
+    "latest": "2024-03-15T04:00:00+05:30",
+    "best_estimate": "2024-03-15T01:00:00+05:30",
+    "window_hours": 6.0,
+    "confidence": 0.82,
+    "precision": "RANGE"
+  },
+  "confidence_scores": {
+    "overall_confidence": 0.724,
+    "primary_candidate_confidence": 0.82,
+    "signal_agreement_score": 0.6,
+    "corroboration_bonus": 0.18,
+    "conflict_penalty": 0.0,
+    "missing_signal_penalty": 0.08,
+    "total_signals": 5,
+    "supporting_signal_count": 3,
+    "conflicting_signal_count": 0
+  },
+  "supporting_signals": [
+    {
+      "signal_id": "sig-001",
+      "signal_type": "PMI_STATEMENT",
+      "confidence_level": "OBSERVED",
+      "raw_text": "Post-mortem interval estimated 12 to 18 hours",
+      "normalized_value": "PMI 12-18 hours prior to examination",
+      "confidence": 0.85,
+      "weight": 0.72,
+      "evidence_file_id": "file-001-autopsy",
+      "entity_type": "TIME_OF_DEATH"
+    },
+    {
+      "signal_id": "sig-002",
+      "signal_type": "DIRECT_EXAMINER",
+      "confidence_level": "OBSERVED",
+      "raw_text": "Death estimated to have occurred around midnight",
+      "normalized_value": "Death around midnight 14-15 March 2024",
+      "confidence": 0.90,
+      "weight": 0.86,
+      "evidence_file_id": "file-001-autopsy",
+      "entity_type": "TIME_OF_DEATH"
+    },
+    {
+      "signal_id": "sig-003",
+      "signal_type": "RIGOR_MORTIS",
+      "confidence_level": "OBSERVED",
+      "raw_text": "Rigor mortis well developed in all limbs",
+      "normalized_value": "Rigor mortis: well developed",
+      "confidence": 0.80,
+      "weight": 0.56,
+      "evidence_file_id": "file-001-autopsy",
+      "entity_type": "EXTERNAL_EXAMINATION"
+    },
+    {
+      "signal_id": "sig-004",
+      "signal_type": "LIVIDITY",
+      "confidence_level": "OBSERVED",
+      "raw_text": "Lividity fixed on posterior aspect",
+      "normalized_value": "Lividity: fixed",
+      "confidence": 0.75,
+      "weight": 0.49,
+      "evidence_file_id": "file-001-autopsy",
+      "entity_type": "EXTERNAL_EXAMINATION"
+    },
+    {
+      "signal_id": "sig-005",
+      "signal_type": "LAST_SEEN_ALIVE",
+      "confidence_level": "INFERRED",
+      "raw_text": "Last seen alive at around 9 PM on 14th March",
+      "normalized_value": "Last seen alive 2024-03-14 21:00",
+      "confidence": 0.70,
+      "weight": 0.39,
+      "evidence_file_id": "file-002-fir",
+      "entity_type": "DECEASED_INFO"
+    }
+  ],
+  "signal_conflicts": [],
+  "provenance_map": {
+    "cand-001": [
+      {
+        "evidence_file_id": "file-001-autopsy",
+        "entity_id": "ent-tod-001",
+        "entity_type": "TIME_OF_DEATH",
+        "raw_text": "Post-mortem interval estimated 12 to 18 hours",
+        "confidence": 0.85,
+        "page": 3
+      }
+    ]
+  },
+  "reasoning_trace": [
+    {
+      "step_index": 1,
+      "action": "signal_extraction",
+      "output": "Extracted 5 forensic signals",
+      "rationale": "Signal types: {PMI_STATEMENT: 1, DIRECT_EXAMINER: 1, RIGOR_MORTIS: 1, LIVIDITY: 1, LAST_SEEN_ALIVE: 1}"
+    },
+    {
+      "step_index": 2,
+      "action": "window_construction",
+      "output": "Built 5 TOD windows from signals",
+      "rationale": "Forensic timing rules applied per signal type"
+    },
+    {
+      "step_index": 3,
+      "action": "candidate_formation",
+      "output": "Formed 2 TOD candidates by grouping overlapping windows",
+      "rationale": "Signals with overlapping time windows merged into consensus candidates"
+    },
+    {
+      "step_index": 4,
+      "action": "conflict_detection",
+      "output": "No signal conflicts detected",
+      "rationale": "All candidate windows are compatible"
+    },
+    {
+      "step_index": 5,
+      "action": "final_ranking",
+      "output": "Primary candidate: cand-001 (confidence: 0.820)",
+      "rationale": "Overall confidence: 0.724"
+    }
+  ],
+  "final_tod_hypothesis": {
+    "hypothesis_id": "hyp-001",
+    "tod_window": {
+      "earliest": "2024-03-14T22:00:00+05:30",
+      "latest": "2024-03-15T04:00:00+05:30",
+      "best_estimate": "2024-03-15T01:00:00+05:30",
+      "window_hours": 6.0,
+      "confidence": 0.82,
+      "precision": "RANGE"
+    },
+    "primary_candidate_id": "cand-001",
+    "supporting_candidate_ids": ["cand-002"],
+    "confidence": 0.724,
+    "summary": "Best TOD estimate: 2024-03-14T22:00:00+05:30 to 2024-03-15T04:00:00+05:30 (confidence: 0.724)",
+    "caveats": [
+      "Some expected signal types are missing (penalty: 0.080)"
+    ]
+  },
+  "processing_time_ms": 45.23,
+  "processed_at": "2024-03-16T10:30:00Z"
+}
