@@ -1,0 +1,10 @@
+SYNTHETIC TRAINING DATA — NOT A REAL INVESTIGATION
+TOXICOLOGY REPORT
+Case No: SYN-104/2026
+Deceased: Mira Sen, Age: 42 years
+Collection time: 2026-10-01T12:15:00+05:30
+Specimen: Femoral blood
+Method: Headspace chromatography
+Ethanol: 20 mg/dL
+Cyanide: Not detected
+Laboratory reference context: Not provided. Interpretation requires the reporting laboratory.

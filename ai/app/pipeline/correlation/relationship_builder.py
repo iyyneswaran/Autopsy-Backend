@@ -28,11 +28,11 @@ from app.pipeline.structuring.schemas import ForensicEntityGraph, StructuredEnti
 
 # (source_type, target_type) → edge_type for inferred relationships
 INFERRED_RULES: list[tuple[str, str, CorrelationEdgeType]] = [
-    ("INJURY", "CAUSE_OF_DEATH", CorrelationEdgeType.CAUSAL_LINK),
-    ("TOXICOLOGY_FINDING", "CAUSE_OF_DEATH", CorrelationEdgeType.CAUSAL_LINK),
+    ("INJURY", "CAUSE_OF_DEATH", CorrelationEdgeType.EVIDENTIARY_LINK),
+    ("TOXICOLOGY_FINDING", "CAUSE_OF_DEATH", CorrelationEdgeType.EVIDENTIARY_LINK),
     ("TOXICOLOGY_FINDING", "MANNER_OF_DEATH", CorrelationEdgeType.EVIDENTIARY_LINK),
     ("INJURY", "ANATOMICAL_REFERENCE", CorrelationEdgeType.EVIDENTIARY_LINK),
-    ("ORGAN_FINDING", "CAUSE_OF_DEATH", CorrelationEdgeType.CAUSAL_LINK),
+    ("ORGAN_FINDING", "CAUSE_OF_DEATH", CorrelationEdgeType.EVIDENTIARY_LINK),
     ("TIME_OF_DEATH", "CAUSE_OF_DEATH", CorrelationEdgeType.TEMPORAL_LINK),
     ("EXAMINER", "CASE_IDENTIFIER", CorrelationEdgeType.EVIDENTIARY_LINK),
     ("SCENE_REFERENCE", "CASE_IDENTIFIER", CorrelationEdgeType.EVIDENTIARY_LINK),
@@ -150,7 +150,7 @@ class RelationshipBuilder:
                         confidence=round(conf, 4),
                         weight=0.7,
                         rationale=(
-                            f"Inferred {edge_type.value}: "
+                            f"Co-document association ({edge_type.value}; does not establish causation): "
                             f"{src_type}('{src.canonical_value}') → "
                             f"{tgt_type}('{tgt.canonical_value}') "
                             f"within same document"
@@ -161,6 +161,9 @@ class RelationshipBuilder:
                             entity_id=src.entity_id,
                             entity_type=_entity_type_str(src),
                             canonical_value=src.canonical_value,
+                            raw_text=src.raw_value,
+                            page=src.provenance.document_page,
+                            extraction_method=src.provenance.extraction_method,
                             confidence=src.confidence,
                         ),
                         target_provenance=ProvenanceEntry(
@@ -168,6 +171,9 @@ class RelationshipBuilder:
                             entity_id=tgt.entity_id,
                             entity_type=_entity_type_str(tgt),
                             canonical_value=tgt.canonical_value,
+                            raw_text=tgt.raw_value,
+                            page=tgt.provenance.document_page,
+                            extraction_method=tgt.provenance.extraction_method,
                             confidence=tgt.confidence,
                         ),
                     )

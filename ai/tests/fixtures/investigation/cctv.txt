@@ -1,0 +1,8 @@
+SYNTHETIC TRAINING DATA — NOT A REAL INVESTIGATION
+CCTV EVENT LOG
+Case No: SYN-104/2026
+CCTV event: 2026-10-01T03:00:00+05:30; unidentified pedestrian near entrance.
+CCTV event: 2026-02-30T25:70:00+05:30; deliberately invalid recorder timestamp.
+Clock source: Entrance camera DVR
+Clock offset: Unknown; not corrected.
+No reliable identity comparison is available.

@@ -140,7 +140,7 @@ class StructuringEngine:
                 graph=graph,
                 stage_reports=stage_reports,
                 elapsed_ms=elapsed * 1000,
-                status="COMPLETED",
+                status="PARTIAL" if any(r["status"] == "failed" for r in stage_reports) else "COMPLETED",
             )
 
             logger.info(
@@ -152,8 +152,8 @@ class StructuringEngine:
             return {
                 "structuring_id": str(structuring_record.id),
                 "evidence_file_id": evidence_file_id,
-                "status": "COMPLETED",
-                "entity_graph": graph.model_dump(),
+                "status": "PARTIAL" if any(r["status"] == "failed" for r in stage_reports) else "COMPLETED",
+                "entity_graph": graph.model_dump(mode="json"),
                 "stage_reports": stage_reports,
                 "elapsed_seconds": elapsed,
             }
@@ -295,11 +295,9 @@ class StructuringEngine:
             self.db.add(record)
             self.db.flush()
             return record
-        except Exception as e:
-            logger.warning(f"Could not create entity record: {e}")
-            class _MockRecord:
-                id = uuid.uuid4()
-            return _MockRecord()
+        except Exception:
+            self.db.rollback()
+            raise
 
     def _update_record(
         self,
@@ -315,7 +313,7 @@ class StructuringEngine:
             from app.models.pipeline import ExtractionStatus
             record.status = ExtractionStatus(status)
             if graph:
-                record.entity_graph = graph.model_dump()
+                record.entity_graph = graph.model_dump(mode="json")
                 record.entity_count = graph.metrics.total_entities
                 record.entity_types_found = list(graph.metrics.entity_type_counts.keys())
                 record.overall_confidence = graph.metrics.average_confidence
@@ -332,5 +330,6 @@ class StructuringEngine:
             if status in ("COMPLETED", "PARTIAL"):
                 record.completed_at = datetime.now(timezone.utc)
             self.db.commit()
-        except Exception as e:
-            logger.warning(f"Could not update entity record: {e}")
+        except Exception:
+            self.db.rollback()
+            raise

@@ -180,9 +180,35 @@ class TemporalParser:
         """
         expressions: list[TemporalExpression] = []
 
+        # ISO timestamps retain their reported timezone. Unzoned and approximate
+        # expressions remain unresolved rather than receiving invented UTC precision.
+        iso_ranges = []
+        for match in re.finditer(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(?::\d{2})?(?:Z|[+-]\d{2}:\d{2})?', text):
+            iso_ranges.append(match.span())
+            raw = match.group()
+            try:
+                stamp = datetime.fromisoformat(raw.replace('Z', '+00:00'))
+                uncertain = bool(re.search(r'approx|about|around|estimated', text, re.I))
+                resolved = stamp.tzinfo is not None and not uncertain
+                normalized = stamp.isoformat()
+                expressions.append(TemporalExpression(raw_text=raw, normalized_form=normalized,
+                    precision=TemporalPrecision.EXACT if resolved else TemporalPrecision.UNKNOWN,
+                    time_window=TimeWindow(earliest=normalized if resolved else None,
+                        latest=normalized if resolved else None, best_estimate=normalized if resolved else None,
+                        confidence=.9 if resolved else .4, precision=TemporalPrecision.EXACT if resolved else TemporalPrecision.UNKNOWN,
+                        timezone_info=str(stamp.tzinfo) if stamp.tzinfo else 'unspecified'),
+                    resolution_method=ResolutionMethod.DIRECT_PARSE if resolved else ResolutionMethod.UNRESOLVED,
+                    source_evidence_id=evidence_file_id, source_entity_id=entity_id, page=page,
+                    confidence=.9 if resolved else .4))
+            except ValueError:
+                expressions.append(TemporalExpression(raw_text=raw, source_evidence_id=evidence_file_id,
+                    source_entity_id=entity_id, page=page))
+
         # Absolute dates
         for pattern, fmt in _DATE_PATTERNS:
             for match in re.finditer(pattern, text, re.IGNORECASE):
+                if any(a <= match.start() < b for a, b in iso_ranges):
+                    continue
                 expr = self._parse_date_match(
                     match, fmt, evidence_file_id, entity_id, page
                 )
@@ -250,14 +276,15 @@ class TemporalParser:
             iso = dt.isoformat()
             return TemporalExpression(
                 raw_text=raw,
-                normalized_form=iso,
-                precision=TemporalPrecision.EXACT,
+                normalized_form=dt.date().isoformat(),
+                precision=TemporalPrecision.UNKNOWN,
                 time_window=TimeWindow(
-                    earliest=iso,
-                    latest=iso,
-                    best_estimate=iso,
-                    confidence=0.90,
-                    precision=TemporalPrecision.EXACT,
+                    earliest=None,
+                    latest=None,
+                    best_estimate=None,
+                    timezone_info="unspecified; date only",
+                    confidence=0.40,
+                    precision=TemporalPrecision.UNKNOWN,
                 ),
                 resolution_method=ResolutionMethod.DIRECT_PARSE,
                 source_evidence_id=evidence_file_id,

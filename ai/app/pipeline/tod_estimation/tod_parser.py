@@ -179,6 +179,8 @@ class TODParser:
 
         for entity_type_key, entities in graph.entities.items():
             for entity in entities:
+                if entity.metadata.get("assertion_status") in ("NEGATED", "UNCERTAIN"):
+                    continue
                 signal = self._entity_to_signal(
                     evidence_file_id, entity, entity_type_key
                 )

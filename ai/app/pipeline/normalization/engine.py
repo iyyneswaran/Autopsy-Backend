@@ -53,8 +53,9 @@ class NormalizationEngine:
     9. Quality Scoring — compute confidence/completeness metrics
     """
 
-    def __init__(self, db: Session) -> None:
+    def __init__(self, db: Session, entity_graph: dict | None = None) -> None:
         self.db = db
+        self.entity_graph = entity_graph
 
     def normalize(
         self,
@@ -458,8 +459,8 @@ class NormalizationEngine:
                 .first()
             )
 
-            if layer4_record and layer4_record.entity_graph:
-                graph = layer4_record.entity_graph
+            if self.entity_graph is not None or (layer4_record and layer4_record.entity_graph):
+                graph = self.entity_graph if self.entity_graph is not None else layer4_record.entity_graph
                 entities = ForensicEntitySet()
                 
                 type_mapping = {
@@ -494,10 +495,14 @@ class NormalizationEngine:
                     f"Layer 4 Structuring for {evidence_file_id}"
                 )
         except Exception as e:
+            if self.entity_graph is not None:
+                raise
             logger.warning(f"Failed to load Layer 4 output, falling back to Layer 2: {e}")
 
         # 2. Fallback to Layer 2 text-based extraction
-        if not entities:
+        if entities is None and self.entity_graph is not None:
+            raise ValueError("Canonical entity graph could not be consumed")
+        if entities is None:
             # Build text from content preview or all string values
             text_parts = []
             for key in ["content_preview", "extracted_text", "full_text"]:
@@ -534,7 +539,9 @@ class NormalizationEngine:
         )
 
         entities = context.get("forensic_entities")
-        if not entities:
+        if entities is None and self.entity_graph is not None:
+            raise ValueError("Canonical entity graph could not be consumed")
+        if entities is None:
             return
 
         # Extract raw toxicology findings from entities
@@ -576,7 +583,9 @@ class NormalizationEngine:
         )
 
         entities = context.get("forensic_entities")
-        if not entities:
+        if entities is None and self.entity_graph is not None:
+            raise ValueError("Canonical entity graph could not be consumed")
+        if entities is None:
             return
 
         # Convert entities to dicts for mapping

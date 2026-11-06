@@ -1,3 +1,4 @@
+import { requireCase } from "../investigations/caseAccess";
 import type { Request, Response } from "express";
 import { prisma } from "../../config/database";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -17,6 +18,7 @@ export class EvidenceController {
         const user = (req as AuthenticatedRequest).user;
         const { investigationId, type, fileName, filePath, fileHash, fileSize, mimeType, description, metadata } = req.body;
 
+        await requireCase(user, investigationId);
         // Verify investigation exists
         const investigation = await prisma.investigation.findUnique({
             where: { id: investigationId },
@@ -51,6 +53,7 @@ export class EvidenceController {
     static listByInvestigation = asyncHandler(async (req: Request, res: Response) => {
         const { page, limit, skip, sortBy, sortOrder } = parsePagination(req);
         const investigationId = getParam(req, "investigationId");
+        await requireCase((req as AuthenticatedRequest).user, investigationId);
         const type = req.query.type as string | undefined;
 
         const where: any = { investigationId };
@@ -91,6 +94,7 @@ export class EvidenceController {
         });
 
         if (!evidence) throw ApiError.notFound("Evidence");
+        await requireCase((req as AuthenticatedRequest).user, evidence.investigationId);
 
         ApiResponse.success(res, evidence);
     });
@@ -105,7 +109,8 @@ export class EvidenceController {
 
         if (!existing) throw ApiError.notFound("Evidence");
 
-        await prisma.evidence.delete({ where: { id } });
+        await requireCase((req as AuthenticatedRequest).user, existing.investigationId);
+        throw ApiError.forbidden("Original evidence cannot be deleted through the metadata API");
 
         ApiResponse.success(res, null, "Evidence deleted");
     });

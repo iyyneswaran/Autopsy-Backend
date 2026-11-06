@@ -289,6 +289,9 @@ class OCRPipeline:
                 if ocr_result.text.strip():
                     region_texts.append(ocr_result.text)
                     region_confidences.append(ocr_result.confidence)
+                    for word in ocr_result.words:
+                        word.bbox.x += bbox.x
+                        word.bbox.y += bbox.y
                     page_words.extend(ocr_result.words)
 
             page_text = "\n".join(region_texts)
@@ -346,7 +349,7 @@ class OCRPipeline:
             )
         except Exception as e:
             logger.error(f"Tesseract OCR error: {e}")
-            return OCRPageResult(engine=OCREngine.TESSERACT)
+            raise RuntimeError(f"Local OCR failed: {e}") from e
 
     def _run_gemini_ocr(
         self,

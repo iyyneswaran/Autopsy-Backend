@@ -84,10 +84,12 @@ export async function validateSession(
             where: { id: user.sessionId },
         });
 
-        if (!session || !session.isValid || session.expiresAt < new Date()) {
+        const account = await prisma.user.findUnique({ where: { id: user.userId } });
+        if (!account?.isActive || !session || session.userId !== user.userId || !session.isValid || session.expiresAt < new Date()) {
             throw ApiError.unauthorized("Session expired or invalidated");
         }
 
+        user.role = account.role;
         next();
     } catch (err) {
         next(err);

@@ -35,6 +35,7 @@ class Evidence(Base):
     uploaded_by = Column("uploadedById", UUID(as_uuid=True), ForeignKey("users.id"))
 
     created_at = Column("createdAt", DateTime, default=datetime.utcnow)
+    updated_at = Column("updatedAt", DateTime, default=datetime.utcnow)
 
     case = relationship(
         "Case",

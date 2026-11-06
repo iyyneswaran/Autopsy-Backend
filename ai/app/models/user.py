@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime
+from sqlalchemy import Column, String, DateTime, Boolean
 from sqlalchemy.dialects.postgresql import UUID
 from datetime import datetime
 import uuid
@@ -20,5 +20,6 @@ class User(Base):
     password_hash = Column("passwordHash", String, nullable=False)
 
     role = Column(String, nullable=False)
+    is_active = Column("isActive", Boolean, default=True, nullable=False)
 
     created_at = Column("createdAt", DateTime, default=datetime.utcnow)

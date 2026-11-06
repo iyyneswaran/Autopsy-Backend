@@ -148,11 +148,11 @@ class ValueNormalizer:
         return value.strip()
 
     def _normalize_injury(self, value: str) -> str:
-        lower = value.strip().lower()
+        import re
+        result = value.strip()
         for term, canonical in _INJURY_TYPE_MAP.items():
-            if term in lower:
-                return value  # Keep original description, type is classified
-        return value.strip()
+            result = re.sub(r'\b' + re.escape(term) + r'\b', canonical, result, flags=re.I)
+        return result
 
     def _normalize_gender(self, value: str) -> str:
         return _GENDER_MAP.get(value.strip().lower(), value.strip())

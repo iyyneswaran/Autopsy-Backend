@@ -55,6 +55,12 @@ class RegexExtractor(BaseExtractor):
         spans.extend(self._extract_toxicology(text))
         spans.extend(self._extract_anatomical_refs(text))
         spans.extend(self._extract_organ_findings(text))
+        for label, category in [('Date of examination', 'EXAMINATION'), ('Last seen alive', 'LAST_SEEN_ALIVE'),
+            ('Discovery time', 'DISCOVERY'), ('CCTV event', 'WITNESS_OBSERVATION'), ('Witness observation', 'WITNESS_OBSERVATION'),
+            ('Scene observation', 'SCENE_INVESTIGATION'), ('Collection time', 'TOXICOLOGY_COLLECTION')]:
+            for match in re.finditer(rf'{label}\s*[:\-]\s*([^\n]+)', text, re.IGNORECASE):
+                spans.append(self._make_span('SCENE_REFERENCE', match.group(1).strip(), match, .75,
+                    metadata={'sub_type': category, 'event_category': category}))
 
         logger.debug(
             f"RegexExtractor: extracted {len(spans)} spans from "
@@ -204,7 +210,7 @@ class RegexExtractor(BaseExtractor):
         # Numbered injury lists: "Injury No. 1:" or "1."
         pattern = (
             r"(?:Injury\s*(?:No\.?\s*)?\d*\s*[:\-\.]\s*)"
-            r"(.*?)(?=Injury\s*(?:No\.?\s*)?\d+|External|Internal|Opinion|\Z)"
+            r"([^\n]+)"
         )
         for m in re.finditer(pattern, text, re.IGNORECASE | re.DOTALL):
             desc = m.group(1).strip()
@@ -238,7 +244,7 @@ class RegexExtractor(BaseExtractor):
         ]
         for sub in substances:
             for m in re.finditer(
-                rf"({sub}\w*\s*[:\-]?\s*(?:positive|negative|detected|not\s*detected|trace|[\d\.]+\s*\w+))",
+                rf"({sub}\w*\s*[:\-]?\s*(?:positive|negative|detected|not\s*detected|trace|[\d\.]+\s*(?:[a-zµμ]+(?:\s*/\s*[a-zµμ]+)?|%)))",
                 text, re.IGNORECASE,
             ):
                 spans.append(self._make_span(
@@ -310,7 +316,7 @@ class RegexExtractor(BaseExtractor):
             source_span=SourceSpan(
                 start_char=match.start(),
                 end_char=match.end(),
-                raw_text=match.group(0)[:200],
+                raw_text=match.group(0),
             ),
             confidence=confidence,
             extractor_id=self.extractor_id,

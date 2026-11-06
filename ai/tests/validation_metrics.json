@@ -1,0 +1,13 @@
+{
+  "annotated_scope": "Five explicitly labelled injury statements in six synthetic documents",
+  "precision": 1.0,
+  "recall": 1.0,
+  "assertion_accuracy": 1.0,
+  "matching": {
+    "scope": "Three synthetic documents; four positive annotated pairs, fuzzy-name and shared-age negatives",
+    "expected_pairs": 4,
+    "predicted_pairs": 4,
+    "precision": 1.0,
+    "recall": 1.0
+  }
+}

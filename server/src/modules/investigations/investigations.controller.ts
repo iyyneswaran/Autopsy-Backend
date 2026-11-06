@@ -1,3 +1,4 @@
+import { caseScope, requireCase } from "./caseAccess";
 import type { Request, Response } from "express";
 import { prisma } from "../../config/database";
 import { ApiResponse } from "../../utils/ApiResponse";
@@ -39,6 +40,7 @@ export class InvestigationsController {
             },
         });
 
+        await prisma.auditLog.create({data: {userId: user.userId, action: "CASE_CREATED", entity: "Investigation", entityId: investigation.id}});
         ApiResponse.created(res, investigation, "Investigation created");
     });
 
@@ -47,7 +49,7 @@ export class InvestigationsController {
         const { page, limit, skip, sortBy, sortOrder, search } = parsePagination(req);
         const status = req.query.status as string | undefined;
 
-        const where: any = {};
+        const where: any = { AND: [caseScope((req as AuthenticatedRequest).user)] };
 
         if (search) {
             where.OR = [
@@ -86,6 +88,7 @@ export class InvestigationsController {
     // ─── GET BY ID ─────────────────────────────
     static getById = asyncHandler(async (req: Request, res: Response) => {
         const id = getParam(req, "id");
+        await requireCase((req as AuthenticatedRequest).user, id);
 
         const investigation = await prisma.investigation.findUnique({
             where: { id },
@@ -124,6 +127,7 @@ export class InvestigationsController {
     // ─── UPDATE ────────────────────────────────
     static update = asyncHandler(async (req: Request, res: Response) => {
         const id = getParam(req, "id");
+        await requireCase((req as AuthenticatedRequest).user, id);
         const { title, description, status, priority, assignedToId } = req.body;
 
         const existing = await prisma.investigation.findUnique({
@@ -152,12 +156,14 @@ export class InvestigationsController {
             },
         });
 
+        await prisma.auditLog.create({data: {userId: (req as AuthenticatedRequest).user.userId, action: "CASE_UPDATED", entity: "Investigation", entityId: id, metadata: req.body}});
         ApiResponse.success(res, investigation, "Investigation updated");
     });
 
     // ─── DELETE ────────────────────────────────
     static delete = asyncHandler(async (req: Request, res: Response) => {
         const id = getParam(req, "id");
+        await requireCase((req as AuthenticatedRequest).user, id);
 
         const existing = await prisma.investigation.findUnique({
             where: { id },
@@ -165,8 +171,8 @@ export class InvestigationsController {
 
         if (!existing) throw ApiError.notFound("Investigation");
 
-        await prisma.investigation.delete({ where: { id } });
+        await prisma.investigation.update({ where: { id }, data: { status: "ARCHIVED" } });
 
-        ApiResponse.success(res, null, "Investigation deleted");
+        ApiResponse.success(res, null, "Investigation archived; original evidence preserved");
     });
 }

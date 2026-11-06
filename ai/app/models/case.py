@@ -29,10 +29,12 @@ class Case(Base):
     status = Column(String, default="OPEN")
 
     created_by = Column("createdById", UUID(as_uuid=True), ForeignKey("users.id"))
+    assigned_to = Column("assignedToId", UUID(as_uuid=True), ForeignKey("users.id"))
 
     created_at = Column("createdAt", DateTime, default=datetime.utcnow)
+    updated_at = Column("updatedAt", DateTime, default=datetime.utcnow)
 
-    creator = relationship("User")
+    creator = relationship("User", foreign_keys=[created_by])
 
     evidence_items = relationship(
         "Evidence",

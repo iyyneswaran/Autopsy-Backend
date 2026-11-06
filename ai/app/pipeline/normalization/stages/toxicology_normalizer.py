@@ -293,20 +293,5 @@ def _standardize_result(result: str) -> str:
 
 
 def _classify_level(substance: str, concentration: float) -> str:
-    """Classify concentration as therapeutic/toxic/lethal."""
-    thresholds = LEVEL_THRESHOLDS.get(substance)
-    if not thresholds:
-        return ""
-
-    for level, (low, high) in [
-        ("lethal", thresholds.get("lethal", (9999, 9999))),
-        ("toxic", thresholds.get("toxic", (9999, 9999))),
-        ("therapeutic", thresholds.get("therapeutic", (0, 0))),
-    ]:
-        if low <= concentration <= high:
-            return level
-
-    if concentration > 0:
-        # Above therapeutic but below toxic
-        return "elevated"
-    return "normal"
+    """No clinical classification without validated specimen/method-specific context."""
+    return "UNINTERPRETED_REQUIRES_LAB_CONTEXT"

@@ -1,11 +1,11 @@
 import { Router } from "express";
 import { EvidenceController } from "./evidence.controller";
-import { authenticate } from "../../middlewares/authenticate";
+import { authenticate, validateSession } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticate, validateSession);
 
 router.post(
     "/",

@@ -9,6 +9,7 @@ Deterministic for exact matches; explainable similarity for fuzzy matches.
 from __future__ import annotations
 
 import uuid
+import re
 from difflib import SequenceMatcher
 from typing import Any
 
@@ -166,6 +167,8 @@ class EntityMatcher:
         self._audit.clear()
         edges: list[CorrelationEdge] = []
 
+        self._case_ids = {eid: {e.canonical_value for entries in graph.entities.values() for e in entries
+            if str(e.entity_type.value) == 'CASE_IDENTIFIER'} for eid, graph in graphs}
         # Flatten all entities with their source evidence ID
         entity_pool: list[tuple[str, StructuredEntity]] = []
         for efile_id, graph in graphs:
@@ -234,24 +237,32 @@ class EntityMatcher:
         """Compare two entities and produce a CorrelationEdge if related."""
         sim = _similarity(entity_a.canonical_value, entity_b.canonical_value)
 
+        if efile_a == efile_b or entity_a.sub_type != entity_b.sub_type:
+            return None
+        if entity_a.metadata.get('assertion_status') != entity_b.metadata.get('assertion_status'):
+            return None
+        if entity_a.entity_type.value == 'INJURY':
+            if entity_a.metadata.get('assertion_status') in ('NEGATED', 'UNCERTAIN'):
+                return None  # Absence/uncertainty is not an identified injury.
+            if sim < EXACT_THRESHOLD:
+                # Lexical boilerplate cannot establish that two injuries correspond.
+                from app.pipeline.structuring.value_normalizer import _INJURY_TYPE_MAP
+                types = set(_INJURY_TYPE_MAP.values()) | {'contusion', 'abrasion', 'fracture', 'laceration'}
+                a, b = entity_a.canonical_value.lower(), entity_b.canonical_value.lower()
+                shared_type = any(re.search(r'\b'+re.escape(t)+r'\b',a) and re.search(r'\b'+re.escape(t)+r'\b',b) for t in types)
+                locations = {'forearm','arm','wrist','hand','skull','head','neck','chest','abdomen','leg','thigh','foot','back'}
+                shared_location = set(re.findall(r'\b\w+\b',a)) & set(re.findall(r'\b\w+\b',b)) & locations
+                opposite_side = ('left' in a and 'right' in b) or ('right' in a and 'left' in b)
+                if not shared_type or not shared_location or opposite_side:
+                    return None
+        if str(entity_a.entity_type.value) == 'DECEASED_INFO':
+            if entity_a.sub_type != 'DECEASED_NAME':
+                # Shared age or sex is not an identity match.
+                return None
+            if sim < EXACT_THRESHOLD or not (self._case_ids.get(efile_a, set()) & self._case_ids.get(efile_b, set())):
+                return None
         if sim < self.fuzzy_low:
-            # Check for conflicting match: same sub-type but very different values
-            if (
-                entity_a.sub_type
-                and entity_a.sub_type == entity_b.sub_type
-                and efile_a != efile_b
-                and sim < 0.3
-            ):
-                return self._build_edge(
-                    efile_a,
-                    entity_a,
-                    efile_b,
-                    entity_b,
-                    MatchType.CONFLICTING,
-                    sim,
-                    f"Conflicting values for {entity_a.sub_type}: "
-                    f"'{entity_a.canonical_value}' vs '{entity_b.canonical_value}'",
-                )
+            # Low lexical similarity is not evidence of a contradiction.
             return None
 
         if sim >= EXACT_THRESHOLD:

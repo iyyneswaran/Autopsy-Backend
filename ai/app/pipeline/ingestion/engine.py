@@ -96,12 +96,14 @@ class IngestionEngine:
         case_id: str | None = None,
         tags: list[str] | None = None,
         source_attribution: str | None = None,
+        commit: bool = True,
     ) -> dict[str, Any]:
         """
         Ingest a single evidence file through the full pipeline.
 
         Returns a dict with evidence_file_id, status, metadata, etc.
         """
+        filename = os.path.basename(filename.replace("\\", "/"))
         start_time = time.monotonic()
         evidence_file_id = uuid.uuid4()
 
@@ -132,8 +134,15 @@ class IngestionEngine:
 
             try:
                 with open(temp_path, "wb") as tmp:
+                    written = 0
                     while chunk := file_stream.read(settings.PIPELINE_CHUNK_SIZE):
+                        written += len(chunk)
+                        if written > settings.PIPELINE_MAX_FILE_SIZE:
+                            raise FileSizeLimitError(written, settings.PIPELINE_MAX_FILE_SIZE)
                         tmp.write(chunk)
+            except FileSizeLimitError:
+                self._cleanup_temp(temp_path)
+                raise
             except OSError as e:
                 raise StorageError(f"Failed to write temp file: {e}")
 
@@ -150,9 +159,16 @@ class IngestionEngine:
             # ── Step 4: Compute checksums ──
             checksums: ChecksumResult = compute_checksums_from_file(temp_path)
 
+            # Serialize the global checksum catalog without exposing other cases.
+            from sqlalchemy import text
+            self.db.execute(text('SELECT pg_advisory_xact_lock(:key)'),
+                {'key': int(checksums.sha256[:15], 16)})
+
             # ── Step 5: Duplicate detection ──
             dup = check_duplicate(checksums.sha256, self.db)
-            if dup:
+            same_case_duplicate = self.db.query(EvidenceFile).filter_by(sha256_hash=checksums.sha256, case_id=uuid.UUID(case_id) if case_id else None, is_deleted=False).first()
+            if same_case_duplicate:
+                dup = {"evidence_file_id": str(same_case_duplicate.id)}
                 self._cleanup_temp(temp_path)
                 self._log_event(
                     "DUPLICATE_DETECTED",
@@ -214,7 +230,8 @@ class IngestionEngine:
                 md5=checksums.md5,
                 file_size=file_size,
             )
-            self.db.add(checksum_record)
+            if not dup:
+                self.db.add(checksum_record)
 
             # Metadata record
             meta_record = MetadataRecord(
@@ -225,7 +242,7 @@ class IngestionEngine:
             )
             self.db.add(meta_record)
 
-            self.db.commit()
+            self.db.commit() if commit else self.db.flush()
 
             # ── Step 10: Cleanup temp ──
             self._cleanup_temp(temp_path)
@@ -244,6 +261,7 @@ class IngestionEngine:
                 },
             )
 
+            self.db.commit() if commit else self.db.flush()
             return {
                 "evidence_file_id": str(evidence_file_id),
                 "status": "COMPLETED",

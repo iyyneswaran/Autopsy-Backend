@@ -13,3 +13,4 @@ from app.models.pipeline import (
     MetadataRecord,
     NormalizationRecord,
 )
+from app.models.intelligence import CasePipelineRun, PipelineStage, FindingReview, HypothesisRevision

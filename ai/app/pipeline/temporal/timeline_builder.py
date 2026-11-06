@@ -133,6 +133,9 @@ class TimelineBuilder:
                 continue
 
             for entity in entity_list:
+                if entity.metadata.get("assertion_status") == "NEGATED":
+                    continue
+                category = EventCategory(entity.metadata.get("event_category", _ENTITY_TO_CATEGORY[etype_key].value))
                 # Parse temporal expressions from entity value
                 temporal_exprs = self._parser.parse_text(
                     entity.canonical_value or entity.raw_value,
@@ -159,6 +162,10 @@ class TimelineBuilder:
                             temporal_exprs.append(re_)
 
                 # Build time window from expressions
+                if not temporal_exprs and etype_key in ('CASE_IDENTIFIER', 'EXAMINER', 'CAUSE_OF_DEATH', 'MANNER_OF_DEATH', 'TOXICOLOGY_FINDING'):
+                    # A case number, examiner name or laboratory result alone does
+                    # not assert that a timed registration/examination/collection occurred.
+                    continue
                 time_window = self._best_window(temporal_exprs)
 
                 # Determine if this is observed or inferred
@@ -167,13 +174,13 @@ class TimelineBuilder:
 
                 event = TemporalEvent(
                     event_id=str(uuid.uuid4()),
-                    label=self._make_label(etype, entity.canonical_value),
+                    label=f"{category.value.replace('_', ' ').title()}: {(entity.canonical_value or entity.raw_value)[:100]}",
                     description=entity.canonical_value or entity.raw_value,
                     category=category,
                     time_window=time_window,
                     temporal_expressions=temporal_exprs,
                     is_observed=is_observed,
-                    is_anchor=(etype == "EXAMINER"),
+                    is_anchor=(category == EventCategory.EXAMINATION and bool(time_window.earliest)),
                     provenance=TemporalEventProvenance(
                         evidence_file_id=efile_id,
                         entity_id=entity.entity_id,
@@ -203,29 +210,8 @@ class TimelineBuilder:
 
         Uses the processing timestamp as a proxy for document date.
         """
-        if not graph.processed_at:
-            return None
-
-        return TemporalEvent(
-            event_id=str(uuid.uuid4()),
-            label="Document Processing",
-            description=f"Evidence file {efile_id[:8]}... processed",
-            category=EventCategory.DOCUMENT_CREATION,
-            time_window=TimeWindow(
-                earliest=graph.processed_at,
-                latest=graph.processed_at,
-                best_estimate=graph.processed_at,
-                confidence=0.95,
-                precision=TemporalPrecision.EXACT,
-            ),
-            is_observed=True,
-            is_anchor=True,
-            provenance=TemporalEventProvenance(
-                evidence_file_id=efile_id,
-            ),
-            confidence=0.95,
-            resolution_method=ResolutionMethod.DOCUMENT_DATE,
-        )
+        # Processing time is not a forensic event or a document-creation timestamp.
+        return None
 
     def _link_via_correlation(
         self,

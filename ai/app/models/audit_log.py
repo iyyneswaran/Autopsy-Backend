@@ -4,7 +4,7 @@ from sqlalchemy import (
     DateTime,
     ForeignKey
 )
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSON
 from datetime import datetime
 import uuid
 
@@ -27,5 +27,6 @@ class AuditLog(Base):
     resource_id = Column("entityId", String)
 
     ip_address = Column("ipAddress", String)
+    detail = Column("metadata", JSON)
 
     created_at = Column("createdAt", DateTime, default=datetime.utcnow)

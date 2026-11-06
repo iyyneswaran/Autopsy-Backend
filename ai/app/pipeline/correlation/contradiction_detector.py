@@ -114,7 +114,7 @@ class ContradictionDetector:
         contradictions.extend(cross_doc)
 
         # 3. Detect from conflicted clusters
-        cluster_contradictions = self._from_clusters(clusters)
+        cluster_contradictions = []  # Divergent strings alone are not contradictions.
         contradictions.extend(cluster_contradictions)
 
         # Deduplicate
@@ -196,7 +196,7 @@ class ContradictionDetector:
         contradictions: list[Contradiction] = []
 
         # Singleton types: should have one consistent value across case
-        singleton_types = {"CAUSE_OF_DEATH", "MANNER_OF_DEATH"}
+        singleton_types = {"MANNER_OF_DEATH"}
 
         for etype in singleton_types:
             # Collect all values for this entity type across documents
@@ -217,7 +217,7 @@ class ContradictionDetector:
                     sim = _similarity(
                         ent_a.canonical_value, ent_b.canonical_value
                     )
-                    if sim < self.threshold:
+                    if ent_a.canonical_value.upper() in {"HOMICIDE", "SUICIDE", "ACCIDENT", "NATURAL"} and ent_b.canonical_value.upper() in {"HOMICIDE", "SUICIDE", "ACCIDENT", "NATURAL"} and ent_a.canonical_value.upper() != ent_b.canonical_value.upper():
                         field, severity = CONTRADICTION_RULES.get(
                             etype, ("unknown", ContradictionSeverity.MEDIUM)
                         )

@@ -53,6 +53,7 @@ class LegibilityGrade(str, enum.Enum):
 
 
 class OCREngine(str, enum.Enum):
+    NATIVE = "native"
     """Which OCR engine produced a result."""
     TESSERACT = "TESSERACT"
     GEMINI = "GEMINI"
@@ -219,7 +220,7 @@ class OCRPipelineConfig(BaseModel):
     tesseract: TesseractConfig = Field(default_factory=TesseractConfig)
     gemini: GeminiConfig = Field(default_factory=GeminiConfig)
     min_quality_score: float = 0.3
-    use_gemini_for_handwriting: bool = True
+    use_gemini_for_handwriting: bool = False
     gemini_confidence_threshold: float = 0.7
     max_pages: int = 200
 

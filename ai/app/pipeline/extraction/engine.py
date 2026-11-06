@@ -38,7 +38,6 @@ from app.pipeline.extraction.confidence import (
     flag_low_confidence,
 )
 from app.pipeline.extraction.nlp.regex_extractor import RegexExtractor
-from app.pipeline.extraction.nlp.gemini_extractor import GeminiExtractor
 from app.pipeline.extraction.nlp.section_detector import detect_sections
 from app.pipeline.extraction.nlp.language_detector import detect_language
 
@@ -59,7 +58,6 @@ class ExtractionEngine:
     def __init__(self, db: Session) -> None:
         self.db = db
         self._regex_extractor = RegexExtractor()
-        self._gemini_extractor = GeminiExtractor()
 
     def extract(
         self,
@@ -141,7 +139,7 @@ class ExtractionEngine:
                 envelope=envelope,
                 stage_reports=stage_reports,
                 elapsed_ms=elapsed * 1000,
-                status="COMPLETED",
+                status="PARTIAL" if any(r["status"] == "failed" for r in stage_reports) else "COMPLETED",
             )
 
             logger.info(
@@ -152,8 +150,8 @@ class ExtractionEngine:
             return {
                 "extraction_id": str(extraction_record.id),
                 "evidence_file_id": evidence_file_id,
-                "status": "COMPLETED",
-                "envelope": envelope.model_dump(),
+                "status": "PARTIAL" if any(r["status"] == "failed" for r in stage_reports) else "COMPLETED",
+                "envelope": envelope.model_dump(mode="json"),
                 "stage_reports": stage_reports,
                 "elapsed_seconds": elapsed,
             }
@@ -200,19 +198,26 @@ class ExtractionEngine:
             "language": lang_info,
         }
 
-        # Run rule-based extraction (primary, deterministic)
-        try:
-            regex_spans = self._regex_extractor.extract(text, context)
-            all_spans.extend(regex_spans)
-        except Exception as e:
-            logger.warning(f"Regex extraction failed: {e}")
-
-        # Run Gemini extraction (fallback/enrichment)
-        try:
-            gemini_spans = self._gemini_extractor.extract(text, context)
-            all_spans.extend(gemini_spans)
-        except Exception as e:
-            logger.warning(f"Gemini extraction failed: {e}")
+        # Extract page by page so offsets always address the original assembled page.
+        import re
+        for page in assembled.pages:
+            for span in self._regex_extractor.extract(page.text, context):
+                span.source_span.page = page.page_number
+                start = span.source_span.start_char
+                line_start = page.text.rfind('\n', 0, start) + 1
+                line_end = page.text.find('\n', span.source_span.end_char)
+                passage = page.text[line_start:line_end if line_end >= 0 else len(page.text)]
+                lower = passage.lower()
+                if re.search(r'cannot be excluded|can not be excluded|suspected|possible|possibly|may be|uncertain', lower):
+                    assertion = 'UNCERTAIN'
+                elif re.search(r'\b(no(?!\s*[.:#])|not|absent|negative|without|nil)\b', lower):
+                    assertion = 'NEGATED'
+                else:
+                    assertion = 'EXTRACTED_ASSERTION'
+                span.metadata.update(assertion_status=assertion, original_passage=passage,
+                    review_status='DETECTED', measurement_context='See original source; laboratory context not inferred')
+                span.source_span.line = page.text[:start].count('\n') + 1
+                all_spans.append(span)
 
         return all_spans
 
@@ -335,12 +340,9 @@ class ExtractionEngine:
             self.db.add(record)
             self.db.flush()
             return record
-        except Exception as e:
-            logger.warning(f"Could not create extraction record: {e}")
-            # Return a mock record for graceful degradation
-            class _MockRecord:
-                id = uuid.uuid4()
-            return _MockRecord()
+        except Exception:
+            self.db.rollback()
+            raise
 
     def _update_record(
         self,
@@ -356,7 +358,7 @@ class ExtractionEngine:
             from app.models.pipeline import ExtractionStatus
             record.status = ExtractionStatus(status)
             if envelope:
-                record.extraction_envelope = envelope.model_dump()
+                record.extraction_envelope = envelope.model_dump(mode="json")
                 record.total_spans = envelope.metadata.total_spans
                 record.overall_confidence = envelope.metadata.overall_confidence
                 record.page_count = envelope.metadata.page_count
@@ -372,5 +374,6 @@ class ExtractionEngine:
             if status in ("COMPLETED", "PARTIAL"):
                 record.completed_at = datetime.now(timezone.utc)
             self.db.commit()
-        except Exception as e:
-            logger.warning(f"Could not update extraction record: {e}")
+        except Exception:
+            self.db.rollback()
+            raise

@@ -1,7 +1,9 @@
 from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[3] / 'server' / '.env')
 
 
 class Settings(BaseSettings):
@@ -12,7 +14,8 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
-    SECRET_KEY: str
+    SECRET_KEY: str = ""
+    JWT_ACCESS_SECRET: str = ""
 
     ALGORITHM: str = "HS256"
 
@@ -44,6 +47,7 @@ class Settings(BaseSettings):
 
     # Google Gemini (for handwriting OCR)
     GOOGLE_API_KEY: str = ""
+    TESSERACT_CMD: str = "tesseract"
 
     # Normalization
     NORMALIZATION_QUALITY_THRESHOLD: float = 0.5
@@ -51,6 +55,7 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        extra = "ignore"
 
 
 settings = Settings()

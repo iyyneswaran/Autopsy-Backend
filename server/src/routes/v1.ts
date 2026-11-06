@@ -3,6 +3,7 @@ import authRoutes from "../auth/auth.routes";
 import usersRoutes from "../modules/users/users.routes";
 import investigationsRoutes from "../modules/investigations/investigations.routes";
 import evidenceRoutes from "../modules/evidence/evidence.routes";
+import intelligenceRoutes from "../modules/intelligence/intelligence.routes";
 import { ApiResponse } from "../utils/ApiResponse";
 import type { Request, Response } from "express";
 
@@ -27,5 +28,6 @@ v1Router.use("/auth", authRoutes);
 v1Router.use("/users", usersRoutes);
 v1Router.use("/investigations", investigationsRoutes);
 v1Router.use("/evidence", evidenceRoutes);
+v1Router.use("/intelligence", intelligenceRoutes);
 
 export default v1Router;

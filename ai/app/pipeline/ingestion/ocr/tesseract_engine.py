@@ -16,6 +16,7 @@ import pytesseract
 from PIL import Image
 
 from app.core.logger import logger
+from app.core.config import settings
 from app.pipeline.ingestion.ocr.schemas import (
     BoundingBox,
     ContentType,
@@ -44,6 +45,7 @@ def extract_text(
         OCRPageResult with text, confidence, words, and lines.
     """
     cfg = config or TesseractConfig()
+    pytesseract.pytesseract.tesseract_cmd = settings.TESSERACT_CMD
     start = time.monotonic()
 
     # Adaptive PSM selection based on content type

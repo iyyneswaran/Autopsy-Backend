@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { InvestigationsController } from "./investigations.controller";
-import { authenticate } from "../../middlewares/authenticate";
+import { authenticate, validateSession } from "../../middlewares/authenticate";
 import { authorize } from "../../middlewares/authorize";
 import { validate } from "../../middlewares/validate";
 import {
@@ -10,7 +10,7 @@ import {
 
 const router = Router();
 
-router.use(authenticate);
+router.use(authenticate, validateSession);
 
 router.post(
     "/",

@@ -10,6 +10,53 @@ datasource db {
   provider = "postgresql"
 }
 
+// Retained by the original migration. No application writes or implicit ID conversion.
+model LegacyUser {
+  id Int @id @default(autoincrement())
+  name String
+  email String @unique(map: "User_email_key")
+  passwordHash String
+  role String
+  createdAt DateTime @default(now())
+  @@map("User")
+  @@ignore
+}
+
+model LegacyCase {
+  id Int @id @default(autoincrement())
+  title String
+  description String
+  status String @default("OPEN")
+  createdBy Int
+  createdAt DateTime @default(now())
+  @@map("Case")
+  @@ignore
+}
+
+model LegacyEvidence {
+  id Int @id @default(autoincrement())
+  caseId Int
+  fileName String
+  filePath String
+  fileHash String
+  fileType String
+  uploadedBy Int
+  createdAt DateTime @default(now())
+  @@map("Evidence")
+  @@ignore
+}
+
+model LegacyAnalysis {
+  id Int @id @default(autoincrement())
+  evidenceId Int
+  analysisType String
+  resultJson Json
+  confidenceScore Float?
+  createdAt DateTime @default(now())
+  @@map("Analysis")
+  @@ignore
+}
+
 // ─────────────────────────────────────────────
 // ENUMS
 // ─────────────────────────────────────────────
@@ -70,6 +117,11 @@ model User {
   @@index([role])
   @@index([isActive])
   @@map("users")
+  // AI pipeline relations: SQLAlchemy writes; Prisma tracks schema ownership.
+  case_pipeline_runs case_pipeline_runs[]
+  finding_reviews finding_reviews[]
+  hypothesis_revisions hypothesis_revisions[]
+
 }
 
 // ─────────────────────────────────────────────
@@ -164,6 +216,11 @@ model Investigation {
   @@index([createdById])
   @@index([assignedToId])
   @@map("investigations")
+  // AI pipeline relations: SQLAlchemy writes; Prisma tracks schema ownership.
+  case_pipeline_runs case_pipeline_runs[]
+  finding_reviews finding_reviews[]
+  hypothesis_revisions hypothesis_revisions[]
+
 }
 
 // ─────────────────────────────────────────────
@@ -221,4 +278,417 @@ model AutopsyReport {
   @@index([investigationId])
   @@index([createdById])
   @@map("autopsy_reports")
+}
+
+// Existing AI-owned tables, included to prevent destructive schema drift.
+// Application writes go through the case intelligence service.
+model acquisition_logs {
+  id                String   @id @db.Uuid
+  evidence_file_id  String?  @db.Uuid
+  upload_session_id String?  @db.Uuid
+  user_id           String?  @db.Uuid
+  action            String   @db.VarChar(100)
+  detail            String?
+  context           Json?    @db.Json
+  correlation_id    String?  @db.VarChar(64)
+  ip_address        String?  @db.VarChar(45)
+  user_agent        String?  @db.VarChar(512)
+  created_at        DateTime @db.Timestamp(6)
+
+  @@index([action], map: "ix_acq_log_action")
+  @@index([created_at], map: "ix_acq_log_created")
+  @@index([evidence_file_id], map: "ix_acq_log_evidence")
+}
+
+model anomaly_detection_records {
+  id                     String                  @id @db.Uuid
+  case_id                String?                 @db.Uuid
+  temporal_id            String?                 @db.Uuid
+  tod_estimation_id      String?                 @db.Uuid
+  status                 extraction_status_enum?
+  anomaly_report         Json?                   @db.Json
+  schema_version         String?                 @db.VarChar(20)
+  evidence_file_ids      Json?                   @db.Json
+  anomaly_count          Int?
+  contradiction_count    Int?
+  critical_count         Int?
+  high_count             Int?
+  overall_confidence     Float?
+  stages_completed       Json?                   @db.Json
+  stages_failed          Json?                   @db.Json
+  error_message          String?
+  processing_time_ms     Float?
+  created_at             DateTime?               @db.Timestamp(6)
+  completed_at           DateTime?               @db.Timestamp(6)
+  temporal_records       temporal_records?       @relation(fields: [temporal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tod_estimation_records tod_estimation_records? @relation(fields: [tod_estimation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([case_id], map: "ix_anomaly_case")
+  @@index([created_at], map: "ix_anomaly_created")
+  @@index([status], map: "ix_anomaly_status")
+  @@index([tod_estimation_id], map: "ix_anomaly_tod")
+}
+
+model case_pipeline_runs {
+  id                       String                 @id @db.Uuid
+  case_id                  String                 @db.Uuid
+  requested_by             String                 @db.Uuid
+  version                  Int
+  request_key              String                 @db.VarChar(128)
+  fingerprint              String                 @db.VarChar(64)
+  schema_version           String                 @db.VarChar(30)
+  status                   String                 @db.VarChar(20)
+  evidence_ids             Json                   @db.Json
+  retry_of                 String?                @db.Uuid
+  warnings                 Json?                  @db.Json
+  error                    String?
+  changes                  Json?                  @db.Json
+  created_at               DateTime               @db.Timestamptz(6)
+  completed_at             DateTime?              @db.Timestamptz(6)
+  investigations           Investigation          @relation(fields: [case_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users                    User                   @relation(fields: [requested_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  case_pipeline_runs       case_pipeline_runs?    @relation("case_pipeline_runsTocase_pipeline_runs", fields: [retry_of], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_case_pipeline_runs case_pipeline_runs[]   @relation("case_pipeline_runsTocase_pipeline_runs")
+  case_pipeline_stages     case_pipeline_stages[]
+  finding_reviews          finding_reviews[]
+
+  @@unique([case_id, request_key])
+  @@unique([case_id, version])
+  @@index([case_id], map: "ix_case_pipeline_runs_case_id")
+  @@index([status], map: "ix_case_pipeline_runs_status")
+}
+
+model case_pipeline_stages {
+  id                         String                 @id @db.Uuid
+  run_id                     String                 @db.Uuid
+  scope                      String                 @db.VarChar(40)
+  name                       String                 @db.VarChar(40)
+  cache_key                  String                 @db.VarChar(64)
+  status                     String                 @db.VarChar(20)
+  schema_version             String?                @db.VarChar(30)
+  input_version              String?                @db.VarChar(30)
+  output                     Json?                  @db.Json
+  record_id                  String?                @db.Uuid
+  reused_from                String?                @db.Uuid
+  warnings                   Json?                  @db.Json
+  error                      String?
+  duration_ms                Float?
+  started_at                 DateTime?              @db.Timestamptz(6)
+  completed_at               DateTime?              @db.Timestamptz(6)
+  case_pipeline_stages       case_pipeline_stages?  @relation("case_pipeline_stagesTocase_pipeline_stages", fields: [reused_from], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  other_case_pipeline_stages case_pipeline_stages[] @relation("case_pipeline_stagesTocase_pipeline_stages")
+  case_pipeline_runs         case_pipeline_runs     @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([run_id, scope, name])
+  @@index([run_id], map: "ix_case_pipeline_stages_run_id")
+  @@index([cache_key, status], map: "ix_stage_cache")
+}
+
+model correlation_records {
+  id                   String                  @id @db.Uuid
+  case_id              String?                 @db.Uuid
+  status               extraction_status_enum?
+  correlation_graph    Json?                   @db.Json
+  schema_version       String?                 @db.VarChar(20)
+  evidence_file_ids    Json?                   @db.Json
+  cluster_count        Int?
+  edge_count           Int?
+  contradiction_count  Int?
+  evidence_group_count Int?
+  overall_confidence   Float?
+  stages_completed     Json?                   @db.Json
+  stages_failed        Json?                   @db.Json
+  error_message        String?
+  processing_time_ms   Float?
+  created_at           DateTime?               @db.Timestamp(6)
+  completed_at         DateTime?               @db.Timestamp(6)
+  temporal_records     temporal_records[]
+
+  @@index([case_id], map: "ix_corr_case")
+  @@index([created_at], map: "ix_corr_created")
+  @@index([status], map: "ix_corr_status")
+}
+
+model evidence_files {
+  id                      String                    @id @db.Uuid
+  original_filename       String                    @db.VarChar(512)
+  mime_type               String                    @db.VarChar(255)
+  category                file_category_enum
+  storage_key             String                    @unique @db.VarChar(1024)
+  storage_path            String                    @db.VarChar(2048)
+  file_size               BigInt
+  sha256_hash             String                    @db.VarChar(64)
+  md5_hash                String?                   @db.VarChar(32)
+  version                 Int
+  parent_file_id          String?                   @db.Uuid
+  status                  ingestion_status_enum
+  error_message           String?
+  case_id                 String?                   @db.Uuid
+  uploaded_by             String?                   @db.Uuid
+  upload_session_id       String?                   @db.Uuid
+  tags                    Json?                     @db.Json
+  source_attribution      String?                   @db.VarChar(512)
+  provenance              Json?                     @db.Json
+  is_deleted              Boolean
+  deleted_at              DateTime?                 @db.Timestamp(6)
+  created_at              DateTime                  @db.Timestamp(6)
+  updated_at              DateTime                  @db.Timestamp(6)
+  upload_sessions         upload_sessions?          @relation(fields: [upload_session_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  file_checksums          file_checksums[]
+  forensic_entity_records forensic_entity_records[]
+  metadata_records        metadata_records[]
+  normalization_records   normalization_records[]
+  ocr_extraction_records  ocr_extraction_records[]
+
+  @@index([case_id], map: "ix_evidence_files_case")
+  @@index([category], map: "ix_evidence_files_category")
+  @@index([created_at], map: "ix_evidence_files_created")
+  @@index([sha256_hash], map: "ix_evidence_files_sha256")
+  @@index([status], map: "ix_evidence_files_status")
+}
+
+model file_checksums {
+  id               String         @id @db.Uuid
+  evidence_file_id String         @db.Uuid
+  sha256           String         @unique @db.VarChar(64)
+  md5              String?        @db.VarChar(32)
+  file_size        BigInt
+  created_at       DateTime?      @db.Timestamp(6)
+  evidence_files   evidence_files @relation(fields: [evidence_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model finding_reviews {
+  id                 String             @id @db.Uuid
+  case_id            String             @db.Uuid
+  run_id             String             @db.Uuid
+  target_id          String             @db.VarChar(200)
+  state              String             @db.VarChar(30)
+  note               String
+  correction         String?
+  user_id            String             @db.Uuid
+  created_at         DateTime           @db.Timestamptz(6)
+  investigations     Investigation      @relation(fields: [case_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  case_pipeline_runs case_pipeline_runs @relation(fields: [run_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users              User               @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([case_id], map: "ix_finding_reviews_case_id")
+  @@index([target_id], map: "ix_finding_reviews_target_id")
+}
+
+model forensic_entity_records {
+  id                     String                  @id @db.Uuid
+  evidence_file_id       String                  @db.Uuid
+  ocr_extraction_id      String?                 @db.Uuid
+  status                 extraction_status_enum?
+  entity_graph           Json?                   @db.Json
+  schema_version         String?                 @db.VarChar(20)
+  entity_count           Int?
+  entity_types_found     Json?                   @db.Json
+  overall_confidence     Float?
+  provenance_depth       Int?
+  validation_passed      Boolean?
+  stages_completed       Json?                   @db.Json
+  stages_failed          Json?                   @db.Json
+  error_message          String?
+  processing_time_ms     Float?
+  created_at             DateTime?               @db.Timestamp(6)
+  completed_at           DateTime?               @db.Timestamp(6)
+  evidence_files         evidence_files          @relation(fields: [evidence_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  ocr_extraction_records ocr_extraction_records? @relation(fields: [ocr_extraction_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([evidence_file_id], map: "ix_forensic_ent_evidence")
+  @@index([ocr_extraction_id], map: "ix_forensic_ent_extraction")
+  @@index([status], map: "ix_forensic_ent_status")
+}
+
+model hypothesis_revisions {
+  id             String        @id @db.Uuid
+  hypothesis_id  String        @db.Uuid
+  case_id        String        @db.Uuid
+  version        Int
+  description    String
+  notes          String
+  status         String        @db.VarChar(30)
+  assessments    Json          @db.Json
+  user_id        String        @db.Uuid
+  created_at     DateTime      @db.Timestamptz(6)
+  investigations Investigation @relation(fields: [case_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  users          User          @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([hypothesis_id, version])
+  @@index([case_id], map: "ix_hypothesis_revisions_case_id")
+  @@index([hypothesis_id], map: "ix_hypothesis_revisions_hypothesis_id")
+}
+
+model metadata_records {
+  id                 String         @id @db.Uuid
+  evidence_file_id   String         @db.Uuid
+  meta_type          String         @db.VarChar(50)
+  extracted_data     Json           @db.Json
+  extraction_version String?        @db.VarChar(20)
+  confidence         Float?
+  warnings           Json?          @db.Json
+  created_at         DateTime?      @db.Timestamp(6)
+  evidence_files     evidence_files @relation(fields: [evidence_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([evidence_file_id], map: "ix_meta_evidence")
+  @@index([meta_type], map: "ix_meta_type")
+}
+
+model normalization_records {
+  id                    String                     @id @db.Uuid
+  evidence_file_id      String                     @db.Uuid
+  status                normalization_status_enum?
+  canonical_output      Json?                      @db.Json
+  schema_version        String?                    @db.VarChar(20)
+  normalization_version Int?
+  quality_score         Float?
+  completeness_score    Float?
+  confidence_score      Float?
+  quality_report        Json?                      @db.Json
+  anomalies_detected    Json?                      @db.Json
+  anomaly_count         Int?
+  stages_completed      Json?                      @db.Json
+  stages_failed         Json?                      @db.Json
+  error_message         String?
+  created_at            DateTime?                  @db.Timestamp(6)
+  completed_at          DateTime?                  @db.Timestamp(6)
+  evidence_files        evidence_files             @relation(fields: [evidence_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([evidence_file_id], map: "ix_norm_evidence")
+  @@index([status], map: "ix_norm_status")
+}
+
+model ocr_extraction_records {
+  id                      String                    @id @db.Uuid
+  evidence_file_id        String                    @db.Uuid
+  status                  extraction_status_enum?
+  extraction_envelope     Json?                     @db.Json
+  schema_version          String?                   @db.VarChar(20)
+  page_count              Int?
+  total_spans             Int?
+  overall_confidence      Float?
+  extractors_used         Json?                     @db.Json
+  stages_completed        Json?                     @db.Json
+  stages_failed           Json?                     @db.Json
+  error_message           String?
+  processing_time_ms      Float?
+  created_at              DateTime?                 @db.Timestamp(6)
+  completed_at            DateTime?                 @db.Timestamp(6)
+  forensic_entity_records forensic_entity_records[]
+  evidence_files          evidence_files            @relation(fields: [evidence_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([evidence_file_id], map: "ix_ocr_extract_evidence")
+  @@index([status], map: "ix_ocr_extract_status")
+}
+
+model temporal_records {
+  id                        String                      @id @db.Uuid
+  case_id                   String?                     @db.Uuid
+  correlation_id            String?                     @db.Uuid
+  status                    extraction_status_enum?
+  forensic_timeline         Json?                       @db.Json
+  schema_version            String?                     @db.VarChar(20)
+  evidence_file_ids         Json?                       @db.Json
+  event_count               Int?
+  relation_count            Int?
+  conflict_count            Int?
+  tod_candidate_count       Int?
+  overall_confidence        Float?
+  stages_completed          Json?                       @db.Json
+  stages_failed             Json?                       @db.Json
+  error_message             String?
+  processing_time_ms        Float?
+  created_at                DateTime?                   @db.Timestamp(6)
+  completed_at              DateTime?                   @db.Timestamp(6)
+  anomaly_detection_records anomaly_detection_records[]
+  correlation_records       correlation_records?        @relation(fields: [correlation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tod_estimation_records    tod_estimation_records[]
+
+  @@index([case_id], map: "ix_temp_case")
+  @@index([correlation_id], map: "ix_temp_correlation")
+  @@index([created_at], map: "ix_temp_created")
+  @@index([status], map: "ix_temp_status")
+}
+
+model tod_estimation_records {
+  id                        String                      @id @db.Uuid
+  case_id                   String?                     @db.Uuid
+  temporal_id               String?                     @db.Uuid
+  status                    extraction_status_enum?
+  tod_estimation_result     Json?                       @db.Json
+  schema_version            String?                     @db.VarChar(20)
+  evidence_file_ids         Json?                       @db.Json
+  candidate_count           Int?
+  signal_count              Int?
+  conflict_count            Int?
+  overall_confidence        Float?
+  stages_completed          Json?                       @db.Json
+  stages_failed             Json?                       @db.Json
+  error_message             String?
+  processing_time_ms        Float?
+  created_at                DateTime?                   @db.Timestamp(6)
+  completed_at              DateTime?                   @db.Timestamp(6)
+  anomaly_detection_records anomaly_detection_records[]
+  temporal_records          temporal_records?           @relation(fields: [temporal_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@index([case_id], map: "ix_tod_case")
+  @@index([created_at], map: "ix_tod_created")
+  @@index([status], map: "ix_tod_status")
+  @@index([temporal_id], map: "ix_tod_temporal")
+}
+
+model upload_sessions {
+  id               String                 @id @db.Uuid
+  user_id          String?                @db.Uuid
+  case_id          String?                @db.Uuid
+  status           ingestion_status_enum?
+  total_files      Int?
+  completed_files  Int?
+  failed_files     Int?
+  is_resumable     Boolean?
+  chunk_size       Int?
+  uploaded_chunks  Json?                  @db.Json
+  session_metadata Json?                  @db.Json
+  created_at       DateTime?              @db.Timestamp(6)
+  updated_at       DateTime?              @db.Timestamp(6)
+  completed_at     DateTime?              @db.Timestamp(6)
+  evidence_files   evidence_files[]
+
+  @@index([status], map: "ix_upload_sessions_status")
+  @@index([user_id], map: "ix_upload_sessions_user")
+}
+
+enum extraction_status_enum {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  FAILED
+}
+
+enum file_category_enum {
+  DOCUMENT
+  IMAGE
+  VIDEO
+  STRUCTURED
+}
+
+enum ingestion_status_enum {
+  PENDING
+  UPLOADING
+  VALIDATING
+  EXTRACTING_METADATA
+  NORMALIZING
+  COMPLETED
+  FAILED
+  DUPLICATE
+}
+
+enum normalization_status_enum {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  PARTIAL
+  FAILED
 }

@@ -124,7 +124,7 @@ class ContradictionRules:
         # 2. Cluster-based contradictions
         if correlation_graph:
             findings.extend(
-                self._detect_cluster_contradictions(correlation_graph)
+                []  # Lexical cluster distance alone does not establish contradiction.
             )
 
         # 3. Cross-document identity contradictions
@@ -193,7 +193,8 @@ class ContradictionRules:
                         val_b.lower(),
                     ).ratio()
 
-                    if similarity < _CONTRADICTION_THRESHOLD:
+                    if (entity_type == 'MANNER_OF_DEATH' and val_a.upper() in {'HOMICIDE','SUICIDE','ACCIDENT','NATURAL'}
+                            and val_b.upper() in {'HOMICIDE','SUICIDE','ACCIDENT','NATURAL'} and val_a.upper() != val_b.upper()):
                         findings.append(
                             self._build_contradiction(
                                 entity_type=entity_type,
@@ -439,9 +440,9 @@ class ContradictionRules:
             severity=_ENTITY_SEVERITY_MAP.get(
                 entity_type, FindingSeverity.MEDIUM
             ),
-            title=f"Contradicting {entity_type} across documents",
+            title=f"Unresolved {entity_type} assertions across documents",
             description=(
-                f"'{val_a}' (from {eid_a}) contradicts "
+                f"'{val_a}' (from {eid_a}) differs from "
                 f"'{val_b}' (from {eid_b})"
             ),
             field=field,
@@ -467,7 +468,7 @@ class ContradictionRules:
             rule_id=rule_id,
             confidence=max(ent_a.confidence, ent_b.confidence),
             resolution_hint=(
-                "Review source documents and prefer higher-confidence value"
+                "Review both original passages; extraction confidence does not determine truth"
                 if abs(ent_a.confidence - ent_b.confidence) > 0.2
                 else "Manual review required — similar confidence levels"
             ),

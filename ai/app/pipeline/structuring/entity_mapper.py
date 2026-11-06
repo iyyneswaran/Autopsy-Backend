@@ -96,7 +96,7 @@ class EntityMapper:
             extraction_method=span.extraction_method,
             extraction_confidence=span.confidence,
             original_text=span.source_span.raw_text,
-            document_page=span.source_span.page if span.source_span.page > 0 else None,
+            document_page=span.source_span.page,
         )
 
         return StructuredEntity(
@@ -128,7 +128,7 @@ class EntityMapper:
         # Group by entity_type + sub_type
         groups: dict[str, list[StructuredEntity]] = {}
         for ent in entities:
-            key = f"{ent.entity_type.value}:{ent.sub_type}"
+            key = f"{ent.entity_type.value}:{ent.sub_type}:{ent.metadata.get('assertion_status', 'EXTRACTED_ASSERTION')}:{ent.provenance.document_page}"
             groups.setdefault(key, []).append(ent)
 
         merged: list[StructuredEntity] = []
